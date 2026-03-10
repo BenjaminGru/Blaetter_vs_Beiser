@@ -209,11 +209,11 @@ NIEMALS gegenseitig die Methoden anfassen.
 Nur diese Methoden:
 
 ```java
-initSettings()
-initGameVars()
-initGame()
-initInput()
-initUI()
+initSettings();
+initGameVars();
+initGame();
+initInput();
+initUI();
 ```
 
 👉 Vor jeder Änderung:
