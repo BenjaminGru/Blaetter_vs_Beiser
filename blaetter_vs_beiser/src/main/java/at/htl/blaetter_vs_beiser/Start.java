@@ -20,14 +20,6 @@ public class Start extends GameApplication {
 
     }
 
-    @Override
-    protected void initGame() {
-        // Falls du schon eine Factory hast:
-        // getGameWorld().addEntityFactory(new GameFactory());
-
-        drawGrid();
-    }
-
     private void drawGrid() {
         for (int y = 0; y < GridService.ROWS; y++) {
             for (int x = 0; x < GridService.COLS; x++) {
@@ -40,6 +32,8 @@ public class Start extends GameApplication {
                 Rectangle rect = new Rectangle(GridService.TILE_SIZE_HEIGHT - 2, GridService.TILE_SIZE_WIDTH - 2);
                 rect.setFill(Color.GREEN.deriveColor(0, 1, 1, 0.3)); // Grün mit 30% Deckkraft (transparent)
                 rect.setStroke(Color.DARKGREEN); // Dunkelgrüner Rand für das Raster
+                rect.setY(getAppHeight() / 8);
+                rect.setX(getAppWidth() / 9);
 
                 // Zeichne ein Rechteck für jede Zelle
                 entityBuilder()
@@ -57,9 +51,13 @@ public class Start extends GameApplication {
     protected void initGame() {
         getGameWorld().addEntityFactory(new Zombie());
 
-        spawn("enemy", getAppWidth(), 100);
-        spawn("enemy", getAppWidth(), 200);
-        spawn("enemy", getAppWidth(), 0);
+        spawn("enemy", getAppWidth(), 60);
+        spawn("enemy", getAppWidth(), 150);
+        spawn("enemy", getAppWidth(), 240);
+        spawn("enemy", getAppWidth(), 330);
+        spawn("enemy", getAppWidth(), 420);
+
+        drawGrid();
 
 
 

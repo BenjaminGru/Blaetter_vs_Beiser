@@ -1,5 +1,6 @@
 package at.htl.blaetter_vs_beiser;
 
+import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.EntityFactory;
 import com.almasb.fxgl.entity.SpawnData;
@@ -11,12 +12,12 @@ public class Zombie implements EntityFactory {
 
 
 
-    @Spawns("enemy") // 2. The tag goes right here
-    public Entity newEnemy(SpawnData data) { // 3. Method signature must look like this
-        return entityBuilder(data)
-
-                .view("img.png")
-                .with(new ZombieComponent())
+    @Spawns("enemy")
+    public Entity newZombie(SpawnData data) {
+        return FXGL.entityBuilder(data)
+                .at(data.getX(), data.getY())
+                .with(new ZombieComponent()) // Die Component regelt das Bild!
+                .zIndex(100)
                 .build();
     }
 }
