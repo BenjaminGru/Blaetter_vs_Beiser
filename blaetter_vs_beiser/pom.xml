@@ -6,6 +6,7 @@
 
     <groupId>at.htl</groupId>
     <artifactId>blaetter_vs_beiser</artifactId>
+
     <version>1.0-SNAPSHOT</version>
     <name>blaetter_vs_beiser</name>
 
@@ -75,7 +76,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>at.htl.blaetter_vs_beiser/at.htl.blaetter_vs_beiser.start</mainClass>
+                            <mainClass>at.htl.blaetter_vs_beiser/at.htl.blaetter_vs_beiser.Start</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>

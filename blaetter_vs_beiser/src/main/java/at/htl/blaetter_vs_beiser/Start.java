@@ -2,9 +2,10 @@ package at.htl.blaetter_vs_beiser;
 
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
-import javafx.application.Application;
 
-public class start extends GameApplication {
+import static javafx.application.Application.launch;
+
+public class Start extends GameApplication {
 
     @Override
     protected void initSettings(GameSettings gameSettings) {
@@ -13,4 +14,7 @@ public class start extends GameApplication {
     }
 
 
+}
+public static void main(String[] args) {
+    launch(args);
 }
