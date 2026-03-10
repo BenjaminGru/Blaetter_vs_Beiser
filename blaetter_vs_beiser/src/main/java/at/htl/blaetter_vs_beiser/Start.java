@@ -53,4 +53,17 @@ public class Start extends GameApplication {
     public static void main(String[] args) {
         launch(args);
     }
+    @Override
+    protected void initGame() {
+        getGameWorld().addEntityFactory(new Zombie());
+
+        spawn("enemy", getAppWidth(), 100);
+        spawn("enemy", getAppWidth(), 200);
+        spawn("enemy", getAppWidth(), 0);
+
+
+
+
+
+    }
 }
