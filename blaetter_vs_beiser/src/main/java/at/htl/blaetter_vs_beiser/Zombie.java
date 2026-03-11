@@ -12,12 +12,12 @@ public class Zombie implements EntityFactory {
 
 
 
-    @Spawns("enemy")
+    @Spawns("zombie")
     public Entity newZombie(SpawnData data) {
         return FXGL.entityBuilder(data)
                 .at(data.getX(), data.getY())
-                .with(new ZombieComponent()) // Die Component regelt das Bild!
                 .zIndex(100)
+                .with(new ZombieComponent())
                 .build();
     }
 }

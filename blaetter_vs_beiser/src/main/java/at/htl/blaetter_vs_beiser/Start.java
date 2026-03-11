@@ -36,7 +36,7 @@ public class Start extends GameApplication {
                 rect.setX(getAppWidth() / 9);
 
                 // Zeichne ein Rechteck für jede Zelle
-                entityBuilder()
+               entityBuilder()
                         .at(posX, posY)
                         .view(rect)
                         .buildAndAttach();
@@ -51,11 +51,11 @@ public class Start extends GameApplication {
     protected void initGame() {
         getGameWorld().addEntityFactory(new Zombie());
 
-        spawn("enemy", getAppWidth(), 60);
-        spawn("enemy", getAppWidth(), 150);
-        spawn("enemy", getAppWidth(), 240);
-        spawn("enemy", getAppWidth(), 330);
-        spawn("enemy", getAppWidth(), 420);
+        spawn("zombie", 100, 60);
+        spawn("zombie", getAppWidth(), 150);
+        spawn("zombie", getAppWidth(), 240);
+        spawn("zombie", getAppWidth(), 330);
+        spawn("zombie", getAppWidth(), 420);
 
         drawGrid();
 
