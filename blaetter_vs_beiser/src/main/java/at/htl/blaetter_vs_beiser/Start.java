@@ -5,63 +5,61 @@ import com.almasb.fxgl.app.GameSettings;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-// Wichtig: Der Standard-Import für alle FXGL-Methoden (entityBuilder, spawn, etc.)
 import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class Start extends GameApplication {
 
     private GridService gridService = new GridService();
+    // Hier ist unser Manager-Objekt (kleines p)
+    private PlantManager plantManager = new PlantManager(gridService);
 
     @Override
     protected void initSettings(GameSettings settings) {
         settings.setTitle("BvB");
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(true);
-
     }
 
-    private void drawGrid() {
-        for (int y = 0; y < GridService.ROWS; y++) {
-            for (int x = 0; x < GridService.COLS; x++) {
-
-                // Berechne die Pixel-Position für die Optik
-                double posX = x * GridService.TILE_SIZE_HEIGHT;
-                double posY = y * GridService.TILE_SIZE_WIDTH;
-
-                // Erstelle das optische Feld (Rechteck)
-                Rectangle rect = new Rectangle(GridService.TILE_SIZE_HEIGHT - 2, GridService.TILE_SIZE_WIDTH - 2);
-                rect.setFill(Color.GREEN.deriveColor(0, 1, 1, 0.3)); // Grün mit 30% Deckkraft (transparent)
-                rect.setStroke(Color.DARKGREEN); // Dunkelgrüner Rand für das Raster
-                rect.setY(getAppHeight() / 8);
-                rect.setX(getAppWidth() / 9);
-
-                // Zeichne ein Rechteck für jede Zelle
-               entityBuilder()
-                        .at(posX, posY)
-                        .view(rect)
-                        .buildAndAttach();
-            }
-        }
+    @Override
+    protected void initInput() {
+        onBtnDown(javafx.scene.input.MouseButton.PRIMARY, () -> {
+            // FEHLER 1 BEHOBEN: kleines 'p', damit wir das Objekt von oben nutzen!
+            plantManager.handleGridClick(getInput().getMouseXWorld(), getInput().getMouseYWorld());
+        });
     }
 
-    public static void main(String[] args) {
-        launch(args);
+    @Override
+    protected void initGameVars(java.util.Map<String, Object> vars) {
+        vars.put("sun", 50);
     }
+
+    @Override
+    protected void initUI() {
+        // FEHLER 2 BEHOBEN: Wir übergeben den plantManager an die UI
+        PlantSelectionUI ui = new PlantSelectionUI(plantManager);
+
+        ui.setTranslateX(0);
+        ui.setTranslateY(0);
+
+        getGameScene().addUINode(ui);
+    }
+
     @Override
     protected void initGame() {
+
         getGameWorld().addEntityFactory(new Zombie());
 
+        /*
         spawn("zombie", 100, 60);
         spawn("zombie", getAppWidth(), 150);
         spawn("zombie", getAppWidth(), 240);
         spawn("zombie", getAppWidth(), 330);
         spawn("zombie", getAppWidth(), 420);
+        */
+        gridService.drawGrid();
+    }
 
-        drawGrid();
-
-
-
-
-
+    public static void main(String[] args) {
+        launch(args);
     }
 }
