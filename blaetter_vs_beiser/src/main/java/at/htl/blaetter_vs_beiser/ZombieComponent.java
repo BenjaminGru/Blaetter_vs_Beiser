@@ -14,7 +14,7 @@ public class ZombieComponent extends Component {
         animWalk = new AnimationChannel(
                 FXGL.image("Zombie3.png"),
                 4, 64, 102,
-                Duration.seconds(3), 0, 3
+                Duration.seconds(2.85), 0, 3
 
         );
 
