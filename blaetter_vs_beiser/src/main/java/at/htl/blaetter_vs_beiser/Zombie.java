@@ -5,6 +5,9 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.EntityFactory;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.Spawns;
+import com.almasb.fxgl.physics.BoundingShape;
+import com.almasb.fxgl.physics.HitBox;
+
 import static com.almasb.fxgl.dsl.FXGLForKtKt.entityBuilder;
 
 public class Zombie implements EntityFactory {
@@ -16,8 +19,11 @@ public class Zombie implements EntityFactory {
     public Entity newZombie(SpawnData data) {
         return FXGL.entityBuilder(data)
                 .at(data.getX(), data.getY())
-                .zIndex(100)
+                // Hier definierst du die Hitbox:
+                // BoundingShape.box(Breite, Höhe)
+                .bbox(new HitBox(BoundingShape.box(64, 102)))
                 .with(new ZombieComponent())
+                .zIndex(100)
                 .build();
     }
 }

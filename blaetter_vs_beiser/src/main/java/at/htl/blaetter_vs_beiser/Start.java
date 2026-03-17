@@ -32,7 +32,8 @@ public class Start extends GameApplication {
         settings.setTitle("BvB");
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(true);
-    }
+        settings.setDeveloperMenuEnabled(true);
+
 
     @Override
     protected void initInput() {
@@ -64,17 +65,6 @@ public class Start extends GameApplication {
     @Override
     protected void initGame() {
 
-        Texture bgTexture = FXGL.texture("Background.png");
-        bgTexture.setFitWidth(getAppWidth());
-        bgTexture.setFitHeight(getAppHeight());
-        bgTexture.setPreserveRatio(false);
-
-
-        entityBuilder()
-                .at(0, 0)
-                .view(bgTexture) // Nutze die skalierte bgTexture
-                .zIndex(-100)      // Ganz nach hinten
-                .buildAndAttach();
 
         getGameWorld().addEntityFactory(new Zombie());
 
