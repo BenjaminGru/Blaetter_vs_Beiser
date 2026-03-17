@@ -7,6 +7,7 @@ import com.almasb.fxgl.texture.Texture;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
@@ -32,8 +33,7 @@ public class Start extends GameApplication {
         settings.setTitle("BvB");
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(true);
-        settings.setDeveloperMenuEnabled(true);
-
+    }
 
     @Override
     protected void initInput() {
@@ -65,8 +65,26 @@ public class Start extends GameApplication {
     @Override
     protected void initGame() {
 
+        Texture bgTexture = FXGL.texture("Background.png");
+        bgTexture.setFitWidth(getAppWidth());
+        bgTexture.setFitHeight(getAppHeight());
+        bgTexture.setPreserveRatio(false);
+
+
+        entityBuilder()
+                .at(0, 0)
+                .view(bgTexture) // Nutze die skalierte bgTexture
+                .zIndex(-100)      // Ganz nach hinten
+                .buildAndAttach();
 
         getGameWorld().addEntityFactory(new Zombie());
+
+        int[] lanes = {110, 190, 270, 350, 430};
+
+        run(() -> {
+            int randomY = lanes[FXGL.random(0, lanes.length - 1)];
+            spawn("zombie", getAppWidth(), randomY);
+        }, Duration.seconds(2.0));
 
         /*
         spawn("zombie", 100, 60);
