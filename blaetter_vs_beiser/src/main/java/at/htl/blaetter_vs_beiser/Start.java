@@ -17,6 +17,8 @@ public class Start extends GameApplication {
         settings.setTitle("BvB");
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(true);
+        settings.setDeveloperMenuEnabled(true);
+
 
     }
 
@@ -49,6 +51,8 @@ public class Start extends GameApplication {
     }
     @Override
     protected void initGame() {
+
+
         getGameWorld().addEntityFactory(new Zombie());
 
         spawn("zombie", 100, 60);
