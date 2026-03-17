@@ -45,12 +45,12 @@ public class PlantSelectionUI extends HBox {
 
         // Alle Pflanzenkarten nutzen nun Bilder aus dem assets/textures/ Ordner von FXGL
         cardsBox.getChildren().addAll(
-                createPlantCard("Bohnenschießer", 100, FXGL.image("Peashooter.png")),
-                createPlantCard("Sonnenblume", 50, FXGL.image("Sunflower.png")),
-                createPlantCard("Walnuss", 50, FXGL.image("Wallnut.png")),
-                createPlantCard("Kartoffelmine", 50, FXGL.image("Potatomine.png")),
-                createPlantCard("Kirschgranate", 150, FXGL.image("Cherrybomb.png")),
-                createPlantCard("Eisbohnenschießer", 150, FXGL.image("Snowpeashooter.png"))
+                createPlantCard("Bohnenschießer", 100, FXGL.image("Plants/Peashooter.png")),
+                createPlantCard("Sonnenblume", 50, FXGL.image("Plants/Sunflower.png")),
+                createPlantCard("Walnuss", 50, FXGL.image("Plants/Wallnut.png")),
+                createPlantCard("Kartoffelmine", 25, FXGL.image("Plants/Potatomine.png")),
+                createPlantCard("Kirschgranate", 150, FXGL.image("Plants/Cherrybomb.png")),
+                createPlantCard("Eisbohnenschießer", 200, FXGL.image("Plants/Snowpeashooter.png"))
         );
 
         getChildren().add(cardsBox);
@@ -83,7 +83,7 @@ public class PlantSelectionUI extends HBox {
         cardContent.setPadding(new Insets(5));
         cardContent.setStyle("-fx-background-color: #DDDDDD;");
 
-        // --- GEÄNDERT: ImageView anstelle von Rectangle für die Pflanze ---
+        // ImageView anstelle von Rectangle für die Pflanze ---
         ImageView plantIcon = new ImageView(plantImage);
         plantIcon.setFitWidth(40);
         plantIcon.setFitHeight(40);
@@ -140,6 +140,7 @@ public class PlantSelectionUI extends HBox {
         StackPane stackPane = new StackPane();
         stackPane.getChildren().addAll(cardContent, highlightPane);
 
+        /*
         // 4. Klick-Logik
         stackPane.setOnMouseClicked(e -> {
             System.out.println(plantName + " ausgewählt! Kostet: " + cost);
@@ -152,9 +153,36 @@ public class PlantSelectionUI extends HBox {
             currentSelectionHighlight = highlightPane;
             currentSelectionHighlight.setVisible(true);
         });
+        */
+
+        stackPane.setOnMousePressed(e -> {
+            if (currentSelectionHighlight != null) {
+                currentSelectionHighlight.setVisible(false);
+            }
+            currentSelectionHighlight = highlightPane;
+            currentSelectionHighlight.setVisible(true);
+
+            // NEU: FXGL-Input statt e.getSceneX()
+            plantManager.startDrag(plantName, cost, getInput().getMouseXUI(), getInput().getMouseYUI(), plantImage);
+        });
+
+        stackPane.setOnMouseDragged(e -> {
+            // NEU: FXGL-Input
+            plantManager.updateDrag(getInput().getMouseXUI(), getInput().getMouseYUI());
+        });
+
+        stackPane.setOnMouseReleased(e -> {
+            // NEU: FXGL-Input
+            plantManager.endDrag(getInput().getMouseXUI(), getInput().getMouseYUI());
+
+            currentSelectionHighlight.setVisible(false);
+        });
+
 
         return stackPane;
+
     }
+
 
     private Rectangle createLPart(double width, double height) {
         Rectangle r = new Rectangle(width, height, L_COLOR);

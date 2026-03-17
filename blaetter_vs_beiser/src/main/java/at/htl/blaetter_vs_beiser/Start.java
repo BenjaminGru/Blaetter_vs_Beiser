@@ -36,15 +36,13 @@ public class Start extends GameApplication {
 
     @Override
     protected void initInput() {
-        onBtnDown(javafx.scene.input.MouseButton.PRIMARY, () -> {
-            // FEHLER 1 BEHOBEN: kleines 'p', damit wir das Objekt von oben nutzen!
-            plantManager.handleGridClick(getInput().getMouseXWorld(), getInput().getMouseYWorld());
-        });
-    }
+
+        }
+
 
     @Override
     protected void initGameVars(java.util.Map<String, Object> vars) {
-        vars.put("sun", 50);
+        vars.put("sun", 1000);
     }
 
     @Override
@@ -75,7 +73,7 @@ public class Start extends GameApplication {
                 .view(bgTexture) // Nutze die skalierte bgTexture
                 .zIndex(-100)      // Ganz nach hinten
                 .buildAndAttach();
-
+        getGameWorld().addEntityFactory(new GameFactory());
         getGameWorld().addEntityFactory(new Zombie());
 
         /*
@@ -85,6 +83,7 @@ public class Start extends GameApplication {
         spawn("zombie", getAppWidth(), 330);
         spawn("zombie", getAppWidth(), 420);
         */
+
         gridService.drawGrid();
     }
 
