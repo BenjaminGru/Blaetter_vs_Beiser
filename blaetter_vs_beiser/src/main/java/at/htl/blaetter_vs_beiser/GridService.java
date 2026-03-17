@@ -14,8 +14,8 @@ public class GridService {
     public static final int COLS = 9;
     public static final int ROWS = 5;
 
-    public static final int TILE_SIZE_WIDTH = 80;
-    public static final int TILE_SIZE_HEIGHT = 80;
+    public static final int TILE_SIZE_WIDTH = 65;
+    public static final int TILE_SIZE_HEIGHT = 100;
 
     private double offsetX;
     private double offsetY;
@@ -24,8 +24,8 @@ public class GridService {
     private boolean[][] occupiedCells = new boolean[COLS][ROWS];
 
     public void drawGrid() {
-        offsetX = getAppWidth() / 19.0;
-        offsetY = getAppHeight() / 4.5;
+        offsetX = getAppWidth() / 4.1;
+        offsetY = getAppHeight() / 8.0;
 
         for (int y = 0; y < ROWS; y++) {
             for (int x = 0; x < COLS; x++) {
