@@ -34,8 +34,8 @@ public class GridService {
                 double posY = offsetY + (y * TILE_SIZE_HEIGHT);
 
                 Rectangle rect = new Rectangle(TILE_SIZE_WIDTH - 2, TILE_SIZE_HEIGHT - 2);
-                rect.setFill(Color.GREEN.deriveColor(0, 1, 1, 0.3));
-                rect.setStroke(Color.DARKGREEN);
+                rect.setFill(Color.TRANSPARENT.deriveColor(0, 1, 1, 0.3));
+                rect.setStroke(Color.TRANSPARENT);
 
                 entityBuilder()
                         .at(posX, posY)

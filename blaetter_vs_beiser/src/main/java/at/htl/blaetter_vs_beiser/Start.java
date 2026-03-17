@@ -79,7 +79,7 @@ public class Start extends GameApplication {
 
         getGameWorld().addEntityFactory(new Zombie());
 
-        int[] lanes = {110, 190, 270, 350, 430};
+        int[] lanes = {75, 170, 270, 370, 470};
 
         run(() -> {
             int randomY = lanes[FXGL.random(0, lanes.length - 1)];
