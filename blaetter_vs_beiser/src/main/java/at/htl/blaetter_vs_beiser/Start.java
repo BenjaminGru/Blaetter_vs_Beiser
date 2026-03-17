@@ -2,6 +2,9 @@ package at.htl.blaetter_vs_beiser;
 
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
+import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.texture.Texture;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
@@ -9,9 +12,20 @@ import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class Start extends GameApplication {
 
-    private GridService gridService = new GridService();
-    // Hier ist unser Manager-Objekt (kleines p)
-    private PlantManager plantManager = new PlantManager(gridService);
+    // Nur deklarieren, noch nicht erschaffen!
+    private GridService gridService;
+    private PlantManager plantManager;
+
+
+
+    @Override
+    protected void onPreInit() {
+        // Diese Methode wird von FXGL aufgerufen, sobald die Engine wach ist,
+        // aber BEVOR initInput oder initUI aufgerufen werden. Perfekt für Manager!
+        gridService = new GridService();
+        plantManager = new PlantManager(gridService);
+    }
+
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -35,6 +49,9 @@ public class Start extends GameApplication {
 
     @Override
     protected void initUI() {
+        Image cursorImg = FXGL.image("Mousecursor.png");
+        getGameScene().getRoot().setCursor(new javafx.scene.ImageCursor(cursorImg, 0, 0));
+
         // FEHLER 2 BEHOBEN: Wir übergeben den plantManager an die UI
         PlantSelectionUI ui = new PlantSelectionUI(plantManager);
 
@@ -46,6 +63,18 @@ public class Start extends GameApplication {
 
     @Override
     protected void initGame() {
+
+        Texture bgTexture = FXGL.texture("Background.png");
+        bgTexture.setFitWidth(getAppWidth());
+        bgTexture.setFitHeight(getAppHeight());
+        bgTexture.setPreserveRatio(false);
+
+
+        entityBuilder()
+                .at(0, 0)
+                .view(bgTexture) // Nutze die skalierte bgTexture
+                .zIndex(-100)      // Ganz nach hinten
+                .buildAndAttach();
 
         getGameWorld().addEntityFactory(new Zombie());
 
