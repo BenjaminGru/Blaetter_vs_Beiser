@@ -1,11 +1,9 @@
 package at.htl.blaetter_vs_beiser;
 
 import javafx.geometry.Point2D;
-import static com.almasb.fxgl.dsl.FXGL.*;
-
-import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import com.almasb.fxgl.entity.Entity; // NEUER IMPORT FÜR DIE SCHAUFEL
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
@@ -20,8 +18,8 @@ public class GridService {
     private double offsetX;
     private double offsetY;
 
-    // NEU: Unser "Gedächtnis". Merkt sich für jedes Feld, ob es belegt ist (true/false)
-    private boolean[][] occupiedCells = new boolean[COLS][ROWS];
+    // NEU: Wir speichern jetzt die ECHTEN Pflanzen (Entities), nicht mehr nur true/false
+    private Entity[][] gridEntities = new Entity[COLS][ROWS];
 
     public void drawGrid() {
         offsetX = getAppWidth() / 4.1;
@@ -41,6 +39,7 @@ public class GridService {
                         .at(posX, posY)
                         .view(rect)
                         .buildAndAttach();
+
             }
         }
     }
@@ -51,29 +50,38 @@ public class GridService {
         return new Point2D(gridX, gridY);
     }
 
-    // --- NEUE METHODEN FÜR DEN PLANTMANAGER ---
+    // --- METHODEN FÜR DEN PLANTMANAGER ---
 
-    // 1. Prüft, ob der Klick überhaupt auf dem Feld war UND ob das Feld leer ist
+    // 1. Prüft, ob das Feld frei ist (also ob da "nichts" bzw. null drin steht)
     public boolean isFree(int x, int y) {
-        // Zuerst checken, ob x und y überhaupt innerhalb von 0-8 und 0-4 liegen
         if (x >= 0 && x < COLS && y >= 0 && y < ROWS) {
-            return !occupiedCells[x][y]; // true, wenn NICHT belegt
+            return gridEntities[x][y] == null; // true, wenn NICHT belegt
         }
         return false; // Klick war außerhalb des Rasens
     }
 
-    // 2. Blockiert ein Feld (wird aufgerufen, wenn Pflanze gebaut wurde)
-    public void setOccupied(int x, int y, boolean occupied) {
+    // 2. Speichert die echte Pflanze im Feld ab
+    public void setOccupied(int x, int y, Entity plant) {
         if (x >= 0 && x < COLS && y >= 0 && y < ROWS) {
-            occupiedCells[x][y] = occupied;
+            gridEntities[x][y] = plant;
         }
     }
 
-    // 3. Rechnet das Grid (z.B. Feld 3|2) zurück in Pixel um, damit FXGL weiß, WO gespawnt wird
+    // 3. NEU FÜR DIE SCHAUFEL: Entfernt die Pflanze vom Spielfeld und aus dem Raster
+    public void removePlant(int x, int y) {
+        if (x >= 0 && x < COLS && y >= 0 && y < ROWS) {
+            Entity plant = gridEntities[x][y];
+            if (plant != null) {
+                plant.removeFromWorld();   // Löscht die Grafik aus dem Spiel
+                gridEntities[x][y] = null; // Macht das Feld wieder frei für neue Pflanzen
+            }
+        }
+    }
+
+    // 4. Rechnet das Grid (z.B. Feld 3|2) zurück in Pixel um
     public Point2D getPixelCoordinates(int x, int y) {
         double posX = offsetX + (x * TILE_SIZE_WIDTH);
         double posY = offsetY + (y * TILE_SIZE_HEIGHT);
         return new Point2D(posX, posY);
     }
 }
-

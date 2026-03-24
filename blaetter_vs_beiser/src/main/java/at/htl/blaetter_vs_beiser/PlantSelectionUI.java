@@ -1,6 +1,8 @@
 package at.htl.blaetter_vs_beiser;
 
 import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.texture.AnimatedTexture;
+import com.almasb.fxgl.texture.AnimationChannel;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -14,6 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
@@ -27,33 +30,75 @@ public class PlantSelectionUI extends HBox {
     private static final double L_LENGTH = 20.0;
     private static final double L_ARC = 10.0;
     private static final Color L_COLOR = Color.YELLOW;
+    private static Text sunTextNode;
 
 
     public PlantSelectionUI(PlantManager plantManager) {
         this.plantManager = plantManager;
 
 
-        setSpacing(20);
-        setPadding(new Insets(10));
-        setAlignment(Pos.CENTER_LEFT);
+        setSpacing(10);
+        setPadding(new Insets(0.1));
+        setAlignment(Pos.TOP_LEFT);
 
-        setStyle("-fx-background-color: #8B4513; -fx-border-color: #5C2E0B; -fx-border-width: 3;");
+        HBox brownBox = new HBox(20);
+        brownBox.setAlignment(Pos.CENTER_LEFT);
+        brownBox.setPadding(new Insets(10));
+        brownBox.setStyle("-fx-background-color: #8B4513; -fx-border-color: #5C2E0B; -fx-border-width: 3;");
 
-        getChildren().add(createSunCounter());
+        // 3. Sonnen und Pflanzen kommen in den BRAUNEN Kasten
+        brownBox.getChildren().add(createSunCounter());
 
         HBox cardsBox = new HBox(5);
-
-        // Alle Pflanzenkarten nutzen nun Bilder aus dem assets/textures/ Ordner von FXGL
         cardsBox.getChildren().addAll(
-                createPlantCard("Bohnenschießer", 100, FXGL.image("Peashooter.png")),
-                createPlantCard("Sonnenblume", 50, FXGL.image("Sunflower.png")),
-                createPlantCard("Walnuss", 50, FXGL.image("Wallnut.png")),
-                createPlantCard("Kartoffelmine", 50, FXGL.image("Potatomine.png")),
-                createPlantCard("Kirschgranate", 150, FXGL.image("Cherrybomb.png")),
-                createPlantCard("Eisbohnenschießer", 150, FXGL.image("Snowpeashooter.png"))
+                createPlantCard("Bohnenschießer", 100, FXGL.image("Plants/Peashooter.png")),
+                createPlantCard("Sonnenblume", 50, FXGL.image("Plants/Sunflower.png")),
+                createPlantCard("Walnuss", 50, FXGL.image("Plants/Wallnut.png")),
+                createPlantCard("Kartoffelmine", 25, FXGL.image("Plants/Potatomine.png")),
+                createPlantCard("Kirschgranate", 150, FXGL.image("Plants/Cherrybomb.png")),
+                createPlantCard("Eisbohnenschießer", 200, FXGL.image("Plants/Snowpeashooter.png"))
         );
+        brownBox.getChildren().add(cardsBox);
 
-        getChildren().add(cardsBox);
+
+
+
+        // Wir laden das Bild
+        Image shovelImg = FXGL.image("Shovel.png");
+        ImageView shovelView = new ImageView(shovelImg);
+
+
+        shovelView.setFitWidth(40);
+        shovelView.setFitHeight(60);
+        shovelView.setScaleX(1.8);
+        shovelView.setScaleY(1.8);
+        shovelView.setTranslateY(18);
+        shovelView.setPreserveRatio(true);
+
+
+
+        final String sName = "Schaufel";
+        final int sCost = 0;
+
+        shovelView.setOnMousePressed(e -> {
+
+            if (e.getButton() != javafx.scene.input.MouseButton.PRIMARY) return;
+
+
+            plantManager.startDrag(sName, sCost, getInput().getMouseXUI(), getInput().getMouseYUI(), shovelImg);
+        });
+
+        shovelView.setOnMouseDragged(e -> {
+            if (e.getButton() != javafx.scene.input.MouseButton.PRIMARY) return;
+            plantManager.updateDrag(getInput().getMouseXUI(), getInput().getMouseYUI());
+        });
+
+        shovelView.setOnMouseReleased(e -> {
+            if (e.getButton() != javafx.scene.input.MouseButton.PRIMARY) return;
+            plantManager.endDrag(getInput().getMouseXUI(), getInput().getMouseYUI());
+        });
+
+        getChildren().addAll(brownBox, shovelView);
     }
 
     private VBox createSunCounter() {
@@ -67,10 +112,10 @@ public class PlantSelectionUI extends HBox {
 
         sunIcon.setPreserveRatio(true);
 
-        Text sunText = getUIFactoryService().newText("", Color.WHITE, 18);
-        sunText.textProperty().bind(getip("sun").asString());
+        sunTextNode = getUIFactoryService().newText("", Color.WHITE, 18);
+        sunTextNode.textProperty().bind(getip("sun").asString());
 
-        sunBox.getChildren().addAll(sunIcon, sunText);
+        sunBox.getChildren().addAll(sunIcon, sunTextNode);
         return sunBox;
     }
 
@@ -83,7 +128,7 @@ public class PlantSelectionUI extends HBox {
         cardContent.setPadding(new Insets(5));
         cardContent.setStyle("-fx-background-color: #DDDDDD;");
 
-        // --- GEÄNDERT: ImageView anstelle von Rectangle für die Pflanze ---
+        // ImageView anstelle von Rectangle für die Pflanze ---
         ImageView plantIcon = new ImageView(plantImage);
         plantIcon.setFitWidth(40);
         plantIcon.setFitHeight(40);
@@ -140,6 +185,7 @@ public class PlantSelectionUI extends HBox {
         StackPane stackPane = new StackPane();
         stackPane.getChildren().addAll(cardContent, highlightPane);
 
+        /*
         // 4. Klick-Logik
         stackPane.setOnMouseClicked(e -> {
             System.out.println(plantName + " ausgewählt! Kostet: " + cost);
@@ -152,9 +198,47 @@ public class PlantSelectionUI extends HBox {
             currentSelectionHighlight = highlightPane;
             currentSelectionHighlight.setVisible(true);
         });
+        */
+
+        stackPane.setOnMousePressed(e -> {
+
+            if(e.getButton() != javafx.scene.input.MouseButton.PRIMARY){
+                return;
+            }
+
+            if (currentSelectionHighlight != null) {
+                currentSelectionHighlight.setVisible(false);
+            }
+            currentSelectionHighlight = highlightPane;
+            currentSelectionHighlight.setVisible(true);
+
+            // NEU: FXGL-Input statt e.getSceneX()
+            plantManager.startDrag(plantName, cost, getInput().getMouseXUI(), getInput().getMouseYUI(), plantImage);
+        });
+
+        stackPane.setOnMouseDragged(e -> {
+
+            if (e.getButton() != javafx.scene.input.MouseButton.PRIMARY) {
+                return;
+            }
+            plantManager.updateDrag(getInput().getMouseXUI(), getInput().getMouseYUI());
+        });
+
+        stackPane.setOnMouseReleased(e -> {
+
+            if (e.getButton() != javafx.scene.input.MouseButton.PRIMARY) {
+                return;
+            }
+            plantManager.endDrag(getInput().getMouseXUI(), getInput().getMouseYUI());
+
+            currentSelectionHighlight.setVisible(false);
+        });
+
 
         return stackPane;
+
     }
+
 
     private Rectangle createLPart(double width, double height) {
         Rectangle r = new Rectangle(width, height, L_COLOR);
@@ -162,5 +246,17 @@ public class PlantSelectionUI extends HBox {
         r.setArcHeight(L_ARC);
         r.setEffect(new DropShadow(5, L_COLOR));
         return r;
+    }
+
+    public static void flashRed() {
+        if (sunTextNode != null) {
+            // 1. Text rot machen
+            sunTextNode.setFill(Color.RED);
+
+            // 2. Einen Timer stellen, der ihn nach 0.3 Sekunden wieder weiß macht
+            getGameTimer().runOnceAfter(() -> {
+                sunTextNode.setFill(Color.WHITE);
+            }, javafx.util.Duration.seconds(0.3));
+        }
     }
 }
