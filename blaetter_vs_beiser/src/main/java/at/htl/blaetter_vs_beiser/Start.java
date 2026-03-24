@@ -67,12 +67,12 @@ public class Start extends GameApplication {
         bgTexture.setFitHeight(getAppHeight());
         bgTexture.setPreserveRatio(false);
 
-
         entityBuilder()
                 .at(0, 0)
-                .view(bgTexture) // Nutze die skalierte bgTexture
-                .zIndex(-100)      // Ganz nach hinten
+                .view(bgTexture)
+                .zIndex(-100)
                 .buildAndAttach();
+
         getGameWorld().addEntityFactory(new GameFactory());
         getGameWorld().addEntityFactory(new Zombie());
 
@@ -82,7 +82,8 @@ public class Start extends GameApplication {
         spawn("zombie", getAppWidth(), 240);
         spawn("zombie", getAppWidth(), 330);
         spawn("zombie", getAppWidth(), 420);
-        */
+
+         */
 
         gridService.drawGrid();
     }

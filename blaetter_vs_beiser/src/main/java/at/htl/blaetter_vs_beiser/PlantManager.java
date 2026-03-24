@@ -1,5 +1,6 @@
 package at.htl.blaetter_vs_beiser;
 
+import com.almasb.fxgl.entity.Entity;
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -60,19 +61,33 @@ public class PlantManager {
             int x = (int) gridPos.getX();
             int y = (int) gridPos.getY();
 
-            if(gridService.isFree(x, y)) {
+            // --- 1. SONDERFALL: WIR HABEN DIE SCHAUFEL IN DER HAND ---
+            if (draggingPlant.equals("Schaufel")) {
+                // Checken, ob da überhaupt eine Pflanze steht (!isFree bedeutet "ist belegt")
+                if (!gridService.isFree(x, y)) {
+                    gridService.removePlant(x, y); // Löscht die Pflanze
+                    System.out.println("🧹 Pflanze auf Feld " + x + "|" + y + " entfernt!");
+                }
+            }
 
-                int currentSun = getip("sun").get();
+            else {
+                if(gridService.isFree(x, y)) {
+                    int currentSun = getip("sun").get();
 
-                if(currentSun >= draggingCost) {
-                    inc("sun", -draggingCost);
-                    gridService.setOccupied(x, y, true);
+                    if(currentSun >= draggingCost) {
+                        inc("sun", -draggingCost); // Bezahlen
 
-                    Point2D pixelPos = gridService.getPixelCoordinates(x, y);
-                    String entityName = getEntityNameFromUI(draggingPlant);
+                        Point2D pixelPos = gridService.getPixelCoordinates(x, y);
+                        String entityName = getEntityNameFromUI(draggingPlant);
 
-                    spawn(entityName, pixelPos.getX(), pixelPos.getY());
-
+                        Entity newPlant = spawn(entityName, pixelPos.getX(), pixelPos.getY() + 20);
+                        gridService.setOccupied(x, y, newPlant);
+                    }
+                    // --- NEU: WENN WIR ZU WENIG SONNEN HABEN ---
+                    else {
+                        System.out.println("❌ Nicht genug Sonnen für " + draggingPlant + "!");
+                        PlantSelectionUI.flashRed(); // Löst das Blinken aus!
+                    }
                 }
             }
         }
