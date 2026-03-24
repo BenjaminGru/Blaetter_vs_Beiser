@@ -39,7 +39,7 @@ public class ZombieComponent extends Component {
                 entity.setProperty("typ", "Hut_ZOMBIE");
             } else if (true) {
                 Texture hut = FXGL.texture("Zombies/Goldegger_Hut4.png");
-                hut.setTranslateX(-12);
+                hut.setTranslateX(-13);
                 hut.setTranslateY(-58);
                 entity.getViewComponent().addChild(hut);
 
@@ -61,7 +61,7 @@ public class ZombieComponent extends Component {
         timer += tpf;
 
         // Er läuft 2 Sekunden, dann macht er 1 Sekunde Pause
-        if (timer % 3.0 < 1.0) {
+        if (timer % 3.0 < 2.0) {
             entity.translateX(-20 * tpf);
             //texture.play(); // Optional: Animation anmachen
         }
