@@ -13,9 +13,9 @@ public class ZombieComponent extends Component {
 
     public ZombieComponent() {
         animWalk = new AnimationChannel(
-                FXGL.image("Zombies/Zombie3.png"),
-                4, 64, 102,
-                Duration.seconds(2.85), 0, 3
+                FXGL.image("Zombies/img_1.png"),
+                12, 60, 102,
+                Duration.seconds(1.425), 0, 3
 
         );
 
@@ -61,12 +61,9 @@ public class ZombieComponent extends Component {
         timer += tpf;
 
         // Er läuft 2 Sekunden, dann macht er 1 Sekunde Pause
-        if (timer % 3.0 < 2.0) {
+        if (timer % 3.0 < 1.0) {
             entity.translateX(-20 * tpf);
             //texture.play(); // Optional: Animation anmachen
-        } else {
-            // Hier steht er still
-            //texture.stop(); // Optional: Animation pausieren
         }
     }
 }
