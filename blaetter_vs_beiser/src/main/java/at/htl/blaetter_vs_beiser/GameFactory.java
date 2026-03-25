@@ -23,60 +23,46 @@ public class GameFactory implements EntityFactory {
 
     @Spawns("sunflower")
     public Entity newSunflower(SpawnData data) {
-        Texture tex = texture("Plants/Sunflower.png");
-        tex.setFitWidth(60);
-        tex.setFitHeight(60);
-
         return entityBuilder(data)
-                .view(tex)
+                // Wir fügen unsere brandneue Animations-Komponente hinzu:
+                .with(new at.htl.blaetter_vs_beiser.Components_Plants.Sunflower())
                 .build();
     }
 
 
     @Spawns("wallnut")
     public Entity newWallnut(SpawnData data) {
-        Texture tex = texture("Plants/Wallnut.png");
-        tex.setFitWidth(60);
-        tex.setFitHeight(60);
-
         return entityBuilder(data)
-                .view(tex)
+                // Wir fügen unsere brandneue Animations-Komponente hinzu:
+                .with(new at.htl.blaetter_vs_beiser.Components_Plants.Wallnut())
                 .build();
     }
 
 
     @Spawns("potatomine")
-    public Entity newPotatoMine(SpawnData data) {
-        Texture tex = texture("Plants/Potatomine.png");
-        tex.setFitWidth(60);
-        tex.setFitHeight(60);
-
+    public Entity newPotatomine(SpawnData data) {
         return entityBuilder(data)
-                .view(tex)
+                // Wir fügen unsere brandneue Animations-Komponente hinzu:
+                .with(new at.htl.blaetter_vs_beiser.Components_Plants.Potatomine())
                 .build();
     }
 
     // --- 5. KIRSCHGRANATE ---
     @Spawns("cherrybomb")
-    public Entity newCherryBomb(SpawnData data) {
-        Texture tex = texture("Plants/Cherrybomb.png");
-        tex.setFitWidth(60);
-        tex.setFitHeight(60);
-
+    public Entity newCherrybomb(SpawnData data) {
         return entityBuilder(data)
-                .view(tex)
+                // Wir fügen unsere brandneue Animations-Komponente hinzu:
+                .with(new at.htl.blaetter_vs_beiser.Components_Plants.Cherrybomb())
                 .build();
     }
 
 
     @Spawns("snowpeashooter")
-    public Entity newSnowPeashooter(SpawnData data) {
-        Texture tex = texture("Plants/Snowpeashooter.png");
-        tex.setFitWidth(60);
-        tex.setFitHeight(60);
-
+    public Entity newSnowpeashooter(SpawnData data) {
         return entityBuilder(data)
-                .view(tex)
+                // Wir fügen unsere brandneue Animations-Komponente hinzu:
+                .with(new at.htl.blaetter_vs_beiser.Components_Plants.Snowpeashooter())
                 .build();
     }
+
 }
