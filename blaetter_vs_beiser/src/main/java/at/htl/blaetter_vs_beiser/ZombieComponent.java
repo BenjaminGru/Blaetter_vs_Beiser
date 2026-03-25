@@ -8,19 +8,19 @@ import com.almasb.fxgl.texture.Texture;
 import javafx.util.Duration;
 
 public class ZombieComponent extends Component {
+
+    // --- HIER WERDEN DIE VARIABLEN DEKLARIERT ---
     private AnimatedTexture texture;
     private AnimationChannel animWalk;
+    private boolean hatHut;
+    // --------------------------------------------
 
-    public ZombieComponent() {
-        animWalk = new AnimationChannel(
-                FXGL.image("Zombies/img_1.png"),
-                12, 60, 102,
-                Duration.seconds(1.425), 0, 3
+    public ZombieComponent(boolean hatHut) {
+        this.hatHut = hatHut;
 
-        );
-
+        // Jetzt werden sie im Konstruktor initialisiert
+        animWalk = new AnimationChannel(FXGL.image("Zombies/Zombie3.png"), 4, 64, 102, Duration.seconds(1), 0, 3);
         texture = new AnimatedTexture(animWalk);
-        texture.loop(); // Startet das Beinezappeln
     }
 
     @Override
@@ -28,42 +28,23 @@ public class ZombieComponent extends Component {
         entity.getViewComponent().addChild(texture);
         texture.loop();
 
-            if(false) {
-                Texture hut = FXGL.texture("Zombies/Hut2.png");
-                hut.setTranslateX(-7);
-                hut.setTranslateY(-8);
-                entity.getViewComponent().addChild(hut);
+        if (hatHut) {
+            Texture hut = FXGL.texture("Zombies/Goldegger_Hut4.png");
 
-                // Hut-Zombies haben z.B. 10 HP
-                entity.setProperty("hp", 10);
-                entity.setProperty("typ", "Hut_ZOMBIE");
-            } else if (true) {
-                Texture hut = FXGL.texture("Zombies/Goldegger_Hut4.png");
-                hut.setTranslateX(-13);
-                hut.setTranslateY(-58);
-                entity.getViewComponent().addChild(hut);
+            hut.setTranslateX(-13);
+            hut.setTranslateY(-55);
 
-                // Hut-Zombies haben z.B. 10 HP
-                entity.setProperty("hp", 20);
-                entity.setProperty("typ", "Goldegger_Hut_ZOMBIE");
-
-            }else {
-            // Normale Zombies haben nur 5 HP
-            entity.setProperty("hp", 5);
-            entity.setProperty("typ", "NORMALER_ZOMBIE");
+            entity.getViewComponent().addChild(hut);
         }
     }
 
-    private double timer = 0;
-
     @Override
     public void onUpdate(double tpf) {
-        timer += tpf;
+        // Bewegung nach links
+        entity.translateX(-15 * tpf);
 
-        // Er läuft 2 Sekunden, dann macht er 1 Sekunde Pause
-        if (timer % 3.0 < 2.0) {
-            entity.translateX(-20 * tpf);
-            //texture.play(); // Optional: Animation anmachen
+        if (entity.getRightX() < 50) {
+            entity.removeFromWorld();
         }
     }
 }

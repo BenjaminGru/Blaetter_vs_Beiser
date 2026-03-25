@@ -3,6 +3,7 @@ package at.htl.blaetter_vs_beiser;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.texture.Texture;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
@@ -60,41 +61,58 @@ public class Start extends GameApplication {
         getGameScene().addUINode(ui);
     }
 
+
+
     @Override
     protected void initGame() {
 
-        Texture bgTexture = FXGL.texture("Background.png");
-        bgTexture.setFitWidth(getAppWidth());
-        bgTexture.setFitHeight(getAppHeight());
-        bgTexture.setPreserveRatio(false);
+        System.out.println("#########################################");
+        System.out.println("DEBUG: initGame() wurde GESTARTET!");
+        System.out.println("#########################################");
+        // 1. Hintergrund & Factories
+        entityBuilder().view(texture("Background.png", getAppWidth(), getAppHeight())).zIndex(-100).buildAndAttach();
 
-        entityBuilder()
-                .at(0, 0)
-                .view(bgTexture)
-                .zIndex(-100)
-                .buildAndAttach();
-
-        getGameWorld().addEntityFactory(new GameFactory());
         getGameWorld().addEntityFactory(new Zombie());
-
-        int[] lanes = {75, 170, 270, 370, 470};
-
-        run(() -> {
-            int randomY = lanes[FXGL.random(0, lanes.length - 1)];
-            spawn("zombie", getAppWidth(), randomY);
-        }, Duration.seconds(2.0));
-
-        /*
-        spawn("zombie", 100, 60);
-        spawn("zombie", getAppWidth(), 150);
-        spawn("zombie", getAppWidth(), 240);
-        spawn("zombie", getAppWidth(), 330);
-        spawn("zombie", getAppWidth(), 420);
-
-         */
-
+        getGameWorld().addEntityFactory(new GameFactory());
         gridService.drawGrid();
+
+        // 2. Level laden mit Diagnose
+        try {
+            var loader = getAssetLoader().loadJSON("Level/level1.json", LevelData.class);
+            if (loader.isPresent()) {
+                LevelData level = loader.get();
+                System.out.println("--- START ---");
+                System.out.println("Datei gefunden! Levelname: " + level.levelName);
+
+                if (level.waves == null || level.waves.isEmpty()) {
+                    System.err.println("FEHLER: Die Liste 'waves' ist leer oder null! Prüfe die Namen im JSON.");
+                } else {
+                    System.out.println("Anzahl geplanter Zombies: " + level.waves.size());
+
+                    int[] lanesY = {70, 170, 280, 360, 460};
+
+                    for (LevelData.ZombieSpawn s : level.waves) {
+                        System.out.println("Plane Zombie: " + s.type + " bei Sekunde " + s.time);
+
+                        getGameTimer().runOnceAfter(() -> {
+                            SpawnData data = new SpawnData(getAppWidth(), lanesY[s.lane]);
+                            data.put("mitHut", "HUT".equalsIgnoreCase(s.type));
+                            spawn("zombie", data);
+                            System.out.println("!!! SPAWN JETZT: " + s.type);
+                        }, Duration.seconds(s.time));
+                    }
+                }
+                System.out.println("--- ENDE ---");
+            } else {
+                System.err.println("FEHLER: Datei 'Level/level1.json' existiert nicht im Ordner assets!");
+            }
+        } catch (Exception e) {
+            System.err.println("FEHLER beim JSON-Parsing: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
+
+
 
     public static void main(String[] args) {
         launch(args);
