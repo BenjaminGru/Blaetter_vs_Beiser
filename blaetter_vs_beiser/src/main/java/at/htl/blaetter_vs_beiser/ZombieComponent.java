@@ -13,9 +13,9 @@ public class ZombieComponent extends Component {
 
     public ZombieComponent() {
         animWalk = new AnimationChannel(
-                FXGL.image("Zombies/Zombie3.png"),
-                4, 64, 102,
-                Duration.seconds(2.85), 0, 3
+                FXGL.image("Zombies/img_1.png"),
+                12, 60, 102,
+                Duration.seconds(1.425), 0, 3
 
         );
 
@@ -39,7 +39,7 @@ public class ZombieComponent extends Component {
                 entity.setProperty("typ", "Hut_ZOMBIE");
             } else if (true) {
                 Texture hut = FXGL.texture("Zombies/Goldegger_Hut4.png");
-                hut.setTranslateX(-12);
+                hut.setTranslateX(-13);
                 hut.setTranslateY(-58);
                 entity.getViewComponent().addChild(hut);
 
@@ -64,9 +64,6 @@ public class ZombieComponent extends Component {
         if (timer % 3.0 < 2.0) {
             entity.translateX(-20 * tpf);
             //texture.play(); // Optional: Animation anmachen
-        } else {
-            // Hier steht er still
-            //texture.stop(); // Optional: Animation pausieren
         }
     }
 }
