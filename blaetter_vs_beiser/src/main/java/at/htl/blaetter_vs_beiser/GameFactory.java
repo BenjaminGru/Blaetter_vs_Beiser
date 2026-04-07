@@ -1,23 +1,57 @@
 package at.htl.blaetter_vs_beiser;
 
+
+import com.almasb.fxgl.physics.HitBox;
+import com.almasb.fxgl.physics.BoundingShape;
 import at.htl.blaetter_vs_beiser.Components_Plants.Peashooter;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.EntityFactory;
 import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.Spawns;
 import com.almasb.fxgl.texture.Texture; // WICHTIG: Texture Import
+import com.almasb.fxgl.dsl.components.ProjectileComponent;
+import javafx.geometry.Point2D;
+import javafx.scene.shape.Circle;
+import javafx.scene.paint.Color;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class GameFactory implements EntityFactory {
 
 
-    @Spawns("peashooter")
-    public Entity newPeashooter(SpawnData data) {
+    // --- 1. DAS PROJEKTIL (Die fliegende Erbse) ---
+    @Spawns("pea") // WICHTIG: Das muss "pea" heißen!
+    public Entity newPea(SpawnData data) {
         return entityBuilder(data)
-                // .view(...)
-                .with(new at.htl.blaetter_vs_beiser.Components_Plants.Peashooter())
+                .type(EntityType.PEA) // Gib ihr das Namensschild "PEA"
+                .viewWithBBox(new Circle(8, Color.LIGHTGREEN))
+                .with(new ProjectileComponent(new Point2D(1, 0), 300))
+                .collidable()
                 .build();
+    }
+
+    @Spawns("icepea")
+    public Entity newIcePea(SpawnData data) {
+        return entityBuilder(data)
+                .type(EntityType.PEA)
+                // Ein hellblauer Kreis für Eis-Erbsen!
+                .viewWithBBox(new javafx.scene.shape.Circle(8, javafx.scene.paint.Color.LIGHTBLUE))
+                .with(new com.almasb.fxgl.dsl.components.ProjectileComponent(new javafx.geometry.Point2D(1, 0), 300))
+                .collidable()
+                .build();
+    }
+
+    // --- 2. DIE PFLANZE (Der Bohnenschießer) ---
+    @Spawns("peashooter") // Das ruft dein Spiel auf, wenn du die Karte kaufst
+    public Entity newPeashooterPlant(SpawnData data) {
+        return entityBuilder(data)
+                .type(EntityType.PLANT) // Gib ihr das Namensschild "PLANT"
+                .with(new Peashooter()) // <--- HIER wird endlich dein wackelnder Spritesheet geladen!
+                .bbox(new HitBox(BoundingShape.box(50, 70)))
+                .collidable()
+                .with("hp",100)
+                .build();
+
     }
 
 
@@ -26,6 +60,9 @@ public class GameFactory implements EntityFactory {
         return entityBuilder(data)
                 // Wir fügen unsere brandneue Animations-Komponente hinzu:
                 .with(new at.htl.blaetter_vs_beiser.Components_Plants.Sunflower())
+                .bbox(new HitBox(BoundingShape.box(50, 70)))
+                .collidable()
+                .with("hp",75)
                 .build();
     }
 
@@ -35,6 +72,9 @@ public class GameFactory implements EntityFactory {
         return entityBuilder(data)
                 // Wir fügen unsere brandneue Animations-Komponente hinzu:
                 .with(new at.htl.blaetter_vs_beiser.Components_Plants.Wallnut())
+                .bbox(new HitBox(BoundingShape.box(50, 70)))
+                .collidable()
+                .with("hp",200)
                 .build();
     }
 
@@ -44,6 +84,9 @@ public class GameFactory implements EntityFactory {
         return entityBuilder(data)
                 // Wir fügen unsere brandneue Animations-Komponente hinzu:
                 .with(new at.htl.blaetter_vs_beiser.Components_Plants.Potatomine())
+                .bbox(new HitBox(BoundingShape.box(50, 70)))
+                .collidable()
+                .with("hp",100)
                 .build();
     }
 
@@ -53,6 +96,9 @@ public class GameFactory implements EntityFactory {
         return entityBuilder(data)
                 // Wir fügen unsere brandneue Animations-Komponente hinzu:
                 .with(new at.htl.blaetter_vs_beiser.Components_Plants.Cherrybomb())
+                .bbox(new HitBox(BoundingShape.box(50, 70)))
+                .collidable()
+                .with("hp",125)
                 .build();
     }
 
@@ -62,6 +108,9 @@ public class GameFactory implements EntityFactory {
         return entityBuilder(data)
                 // Wir fügen unsere brandneue Animations-Komponente hinzu:
                 .with(new at.htl.blaetter_vs_beiser.Components_Plants.Snowpeashooter())
+                .bbox(new HitBox(BoundingShape.box(50, 70)))
+                .collidable()
+                .with("hp",100)
                 .build();
     }
 

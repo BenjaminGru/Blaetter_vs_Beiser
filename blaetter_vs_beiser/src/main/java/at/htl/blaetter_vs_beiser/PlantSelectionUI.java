@@ -17,6 +17,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
+import static com.almasb.fxgl.dsl.FXGL.*;
+import javafx.scene.paint.Color;
+import javafx.util.Duration;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
@@ -119,6 +122,8 @@ public class PlantSelectionUI extends HBox {
         return sunBox;
     }
 
+
+
     // Parameter von colorHint auf plantImage umbenannt für mehr Klarheit
     private Node createPlantCard(String plantName, int cost, Image plantImage) {
 
@@ -206,14 +211,35 @@ public class PlantSelectionUI extends HBox {
                 return;
             }
 
-            if (currentSelectionHighlight != null) {
-                currentSelectionHighlight.setVisible(false);
-            }
-            currentSelectionHighlight = highlightPane;
-            currentSelectionHighlight.setVisible(true);
+            int currentSun = geti("sun"); // Aktuelles Geld abfragen
 
-            // NEU: FXGL-Input statt e.getSceneX()
-            plantManager.startDrag(plantName, cost, getInput().getMouseXUI(), getInput().getMouseYUI(), plantImage);
+            // PRÜFEN: Hat der Spieler genug Geld für diese spezifische Pflanze?
+            if (currentSun >= cost) {
+                // --- GENUG GELD: Alles ganz normal machen ---
+                if (currentSelectionHighlight != null) {
+                    currentSelectionHighlight.setVisible(false);
+                }
+                currentSelectionHighlight = highlightPane;
+                currentSelectionHighlight.setVisible(true);
+
+                plantManager.startDrag(plantName, cost, getInput().getMouseXUI(), getInput().getMouseYUI(), plantImage);
+
+            } else {
+                // --- ZU WENIG GELD: Fehler-Sound und Rot blinken! ---
+                play("audios/error.wav");
+
+                // cardContent (die VBox) rot färben
+                cardContent.setStyle("-fx-background-color: red;");
+
+                // Nach 0.2 Sekunden wieder auf dein Standard-Grau (#DDDDDD) setzen
+                getGameTimer().runOnceAfter(() -> {
+                    cardContent.setStyle("-fx-background-color: #DDDDDD;");
+                }, Duration.seconds(0.2));
+
+                // Extra-Tipp: Da du unten schon eine flashRed() Methode hast, rufen wir die gleich mit auf,
+                // dann blinkt die Sonnen-Anzeige direkt mit!
+                flashRed();
+            }
         });
 
         stackPane.setOnMouseDragged(e -> {
@@ -231,7 +257,10 @@ public class PlantSelectionUI extends HBox {
             }
             plantManager.endDrag(getInput().getMouseXUI(), getInput().getMouseYUI());
 
-            currentSelectionHighlight.setVisible(false);
+            // NEU: Hier ist der Null-Check! Wir prüfen erst, ob die Variable nicht leer ist.
+            if (currentSelectionHighlight != null) {
+                currentSelectionHighlight.setVisible(false);
+            }
         });
 
 
