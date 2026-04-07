@@ -14,12 +14,12 @@ public class Zombie implements EntityFactory {
 
     @Spawns("zombie")
     public Entity newZombie(SpawnData data) {
-        boolean hatHut = data.get("mitHut"); // Wert aus dem JSON holen
+        // Hol den Typ-String aus dem JSON (z.B. "HUT_15")
+        String type = data.get("type");
 
         return entityBuilder(data)
                 .type(EntityType.ZOMBIE)
-                // Hier geben wir den Wert direkt in die Klammern der Komponente!
-                .with(new ZombieComponent(hatHut))
+                .with(new ZombieComponent(type))
                 .collidable()
                 .build();
     }
