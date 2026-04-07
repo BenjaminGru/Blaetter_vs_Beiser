@@ -3,8 +3,10 @@ package at.htl.blaetter_vs_beiser;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
-import com.almasb.fxgl.entity.SpawnData;
+import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.texture.Texture;
+import javafx.scene.Cursor;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -44,7 +46,7 @@ public class Start extends GameApplication {
 
     @Override
     protected void initGameVars(java.util.Map<String, Object> vars) {
-        vars.put("sun", 1000);
+        vars.put("sun", 10000);
     }
 
     @Override
@@ -59,6 +61,25 @@ public class Start extends GameApplication {
         ui.setTranslateY(0);
 
         getGameScene().addUINode(ui);
+
+
+
+        //GOLF UI
+
+
+        Rectangle secretbutton = new Rectangle(50,50, Color.TRANSPARENT);
+
+        secretbutton.setTranslateX(getAppWidth() - 50);
+        secretbutton.setTranslateY(0);
+
+
+
+        secretbutton.setOnMouseClicked(event -> {
+            getSceneService().pushSubScene(new GolfRangeScene());
+        });
+
+        getGameScene().addUINode(secretbutton);
+
     }
 
 
@@ -75,6 +96,14 @@ public class Start extends GameApplication {
         getGameWorld().addEntityFactory(new Zombie());
         getGameWorld().addEntityFactory(new GameFactory());
         gridService.drawGrid();
+
+
+        spawn("zombie", 100, 60);
+        spawn("zombie", getAppWidth(), 150);
+        spawn("zombie", getAppWidth(), 240);
+        spawn("zombie", getAppWidth(), 330);
+        spawn("zombie", getAppWidth(), 420);
+
 
         // 2. Level laden mit Diagnose
         try {
@@ -113,6 +142,38 @@ public class Start extends GameApplication {
     }
 
 
+
+    @Override
+    protected void initPhysics() {
+
+        // Kollision: ERBSE trifft ZOMBIE
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.PEA, EntityType.ZOMBIE) {
+
+            @Override
+            protected void onCollisionBegin(Entity pea, Entity zombie) {
+                // DEIN PART: Die Erbse hat ihr Ziel erreicht und wird zerstört
+                pea.removeFromWorld();
+
+                // PART VON DEINEM FREUND:
+                // Hier kann er später seinen Code einfügen, der dem Zombie Leben abzieht!
+                System.out.println("PENG! Erbse hat Zombie getroffen!");
+                // z.B. zombie.getComponent(ZombieComponent.class).takeDamage(20);
+            }
+        });
+    }
+
+    @Override
+    protected void onUpdate(double tpf) {
+        // Hole alle Pflanzen auf dem Feld
+        var plants = getGameWorld().getEntitiesByType(EntityType.PLANT);
+
+        for (var plant : plants) {
+            // Da jetzt jede Pflanze 100%ig "hp" hat, reicht dieser simple Check:
+            if (plant.getInt("hp") <= 0) {
+                plant.removeFromWorld(); // Pflanze stirbt und verschwindet!
+            }
+        }
+    }
 
     public static void main(String[] args) {
         launch(args);

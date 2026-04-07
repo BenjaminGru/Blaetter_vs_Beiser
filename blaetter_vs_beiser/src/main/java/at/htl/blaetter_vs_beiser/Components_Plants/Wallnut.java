@@ -57,7 +57,7 @@ public class Wallnut extends Component {
         texture.setTranslateX(-10);
         entity.getViewComponent().addChild(texture);
 
-        // Spielt die Wackel-Animation direkt beim Spawnen 1x ab
+
         texture.playAnimationChannel(animIdle);
     }
 }
