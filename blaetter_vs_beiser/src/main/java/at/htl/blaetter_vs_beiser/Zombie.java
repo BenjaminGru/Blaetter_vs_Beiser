@@ -13,7 +13,9 @@ import static com.almasb.fxgl.dsl.FXGLForKtKt.entityBuilder;
 public class Zombie implements EntityFactory {
 
 
+import static com.almasb.fxgl.dsl.FXGL.*;
 
+public class Zombie implements EntityFactory {
 
     @Spawns("zombie")
     public Entity newZombie(SpawnData data) {

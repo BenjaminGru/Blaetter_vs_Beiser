@@ -4,46 +4,58 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.texture.AnimationChannel;
 import com.almasb.fxgl.texture.AnimatedTexture;
+import com.almasb.fxgl.texture.Texture;
 import javafx.util.Duration;
 
 public class ZombieComponent extends Component {
     private AnimatedTexture texture;
     private AnimationChannel animWalk;
+    private String type;
 
-    public ZombieComponent() {
-        animWalk = new AnimationChannel(
-                FXGL.image("Zombie3.png"),
-                4, 64, 102,
-                Duration.seconds(3), 0, 3
+    public ZombieComponent(String type) {
+        this.type = type;
 
-        );
-
+        // Alle Zombies nutzen dieselbe Lauf-Animation
+        animWalk = new AnimationChannel(FXGL.image("Zombies/Zombie3.png"), 4, 64, 102, Duration.seconds(1), 0, 3);
         texture = new AnimatedTexture(animWalk);
-        texture.loop(); // Startet das Beinezappeln
     }
 
     @Override
     public void onAdded() {
-        // Die Textur der Entity hinzufügen
+        // 1. Den nackten Zombie hinzufügen
         entity.getViewComponent().addChild(texture);
+        texture.loop();
 
-        // Da das Originalbild nach links schaut, ist scale(1) korrekt
-        entity.setScaleX(1);
+        // 2. HP und Hut-Bild basierend auf dem Typ setzen
+        if ("HUT_15".equals(type)) {
+            entity.setProperty("hp", 15);
+            addHut("Zombies/Goldegger_Hut4.png", -15);
+        }
+        else if ("HUT_10".equals(type)) {
+            entity.setProperty("hp", 10);
+            addHut("Zombies/Hut2.png", -10);
+        }
+        else {
+            entity.setProperty("hp", 5); // Normaler Zombie
+        }
     }
 
-    private double timer = 0;
+    private void addHut(String pfad, double yOffset) {
+        Texture hut = FXGL.texture(pfad);
+        hut.setTranslateX(15);
+        hut.setTranslateY(yOffset);
+
+        // Anstatt nur addChild, füge ihn explizit ganz oben hinzu
+        entity.getViewComponent().addChild(hut);
+        hut.toFront(); // <--- Zwingt das JavaFX Node nach vorne
+    }
 
     @Override
     public void onUpdate(double tpf) {
-        timer += tpf;
+        entity.translateX(-15 * tpf);
 
-        // Er läuft 2 Sekunden, dann macht er 1 Sekunde Pause
-        if (timer % 3.0 < 2.0) {
-            entity.translateX(-20 * tpf);
-            //texture.play(); // Optional: Animation anmachen
-        } else {
-            // Hier steht er still
-            //texture.stop(); // Optional: Animation pausieren
+        if (entity.getRightX() < 0) {
+            entity.removeFromWorld();
         }
     }
 }
