@@ -226,7 +226,7 @@ public class PlantSelectionUI extends HBox {
 
             } else {
                 // --- ZU WENIG GELD: Fehler-Sound und Rot blinken! ---
-                play("audios/error.wav");
+                play("audios/error.mp3");
 
                 // cardContent (die VBox) rot färben
                 cardContent.setStyle("-fx-background-color: red;");

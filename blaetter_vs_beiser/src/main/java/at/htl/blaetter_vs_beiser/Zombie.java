@@ -1,4 +1,4 @@
-package at.htl.blaetter_vs_beiser;
+/*package at.htl.blaetter_vs_beiser;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
@@ -21,7 +21,11 @@ public class Zombie implements EntityFactory {
                 .type(EntityType.ZOMBIE)
                 .at(data.getX(), data.getY())
                 .zIndex(100)
+                .collidable()
+                .view("Zombie3.png")
+                .bbox(new HitBox(BoundingShape.box(50, 70)))
                 .with(new ZombieComponent())
                 .build();
     }
 }
+*/

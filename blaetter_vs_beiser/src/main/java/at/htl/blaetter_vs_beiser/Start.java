@@ -6,7 +6,7 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.texture.Texture;
-import javafx.scene.Cursor;
+//import javafx.scene.Cursor;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -64,8 +64,6 @@ public class Start extends GameApplication {
 
 
         //GOLF UI
-
-
         Rectangle secretbutton = new Rectangle(50,50, Color.TRANSPARENT);
 
         secretbutton.setTranslateX(getAppWidth() - 50);
@@ -96,14 +94,14 @@ public class Start extends GameApplication {
                 .buildAndAttach();
 
         getGameWorld().addEntityFactory(new GameFactory());
-        getGameWorld().addEntityFactory(new Zombie());
+        //getGameWorld().addEntityFactory(new Zombie());
 
 
-        spawn("zombie", 100, 60);
-        spawn("zombie", getAppWidth(), 150);
-        spawn("zombie", getAppWidth(), 240);
-        spawn("zombie", getAppWidth(), 330);
-        spawn("zombie", getAppWidth(), 420);
+        spawn("zombie", getAppWidth(), 85);
+        spawn("zombie", getAppWidth(), 185);
+        spawn("zombie", getAppWidth(), 285);
+        spawn("zombie", getAppWidth(), 385);
+        spawn("zombie", getAppWidth(), 485);
 
 
 
@@ -113,18 +111,25 @@ public class Start extends GameApplication {
     @Override
     protected void initPhysics() {
 
-        // Kollision: ERBSE trifft ZOMBIE
+        // --- REGEL 1: ERBSE TRIFFT ZOMBIE ---
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.PEA, EntityType.ZOMBIE) {
-
             @Override
             protected void onCollisionBegin(Entity pea, Entity zombie) {
-                // DEIN PART: Die Erbse hat ihr Ziel erreicht und wird zerstört
+                // 1. Die Erbse platzt sofort!
                 pea.removeFromWorld();
 
-                // PART VON DEINEM FREUND:
-                // Hier kann er später seinen Code einfügen, der dem Zombie Leben abzieht!
-                System.out.println("PENG! Erbse hat Zombie getroffen!");
-                // z.B. zombie.getComponent(ZombieComponent.class).takeDamage(20);
+                // 2. Wir rufen die takeDamage-Methode auf unserem Zombie auf
+                zombie.getComponent(ZombieComponent.class).takeDamage(20);
+            }
+        });
+
+        // --- REGEL 2: ZOMBIE TRIFFT PFLANZE ---
+        getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.ZOMBIE, EntityType.PLANT) {
+            @Override
+            protected void onCollisionBegin(Entity zombie, Entity plant) {
+                // Wir rufen die startEating-Methode auf unserem Zombie auf.
+                // Dadurch wird seine "targetPlant" gesetzt, er stoppt und fängt an zu fressen!
+                zombie.getComponent(ZombieComponent.class).startEating(plant);
             }
         });
     }
