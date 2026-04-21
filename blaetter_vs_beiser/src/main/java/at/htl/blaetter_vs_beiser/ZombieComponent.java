@@ -1,79 +1,61 @@
 package at.htl.blaetter_vs_beiser;
 
+import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.component.Component;
-import com.almasb.fxgl.entity.Entity;
-import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
-import com.almasb.fxgl.time.LocalTimer;
+import com.almasb.fxgl.texture.AnimatedTexture;
+import com.almasb.fxgl.texture.Texture;
 import javafx.util.Duration;
 
-import static com.almasb.fxgl.dsl.FXGL.*;
-
 public class ZombieComponent extends Component {
-
-    // --- ANIMATIONS-VARIABLEN ---
     private AnimatedTexture texture;
     private AnimationChannel animWalk;
+    private String type;
 
-    // --- LOGIK-VARIABLEN ---
-    private int hp = 100;
-    private Entity targetPlant = null;
-    private LocalTimer eatTimer;
+    public ZombieComponent(String type) {
+        this.type = type;
 
-    public ZombieComponent() {
-        // 1. Spritesheet laden (Achtung: Passe den Ordnernamen an, falls das Bild z.B. in "Zombies/" liegt!)
-        // Und passe die Zahlen (4, 70, 105) an die echten Maße deines Zombie-Spritesheets an!
-        animWalk = new AnimationChannel(
-                image("zombie3.png"), // <-- Hier ist dein Bild!
-                4, 64, 102,
-                Duration.seconds(1.5), 0, 3
-        );
-
+        // Alle Zombies nutzen dieselbe Lauf-Animation
+        animWalk = new AnimationChannel(FXGL.image("Zombies/Zombie3.png"), 4, 64, 102, Duration.seconds(1), 0, 3);
         texture = new AnimatedTexture(animWalk);
-        texture.loop(); // Zombie wackelt in Endlosschleife
     }
 
     @Override
     public void onAdded() {
-        // 2. Den wackelnden Zombie sichtbar machen!
-        texture.setTranslateY(-20); // (Falls er zu hoch/tief schwebt, hier anpassen)
+        // 1. Den nackten Zombie hinzufügen
         entity.getViewComponent().addChild(texture);
+        texture.loop();
 
-        // Timer starten
-        eatTimer = newLocalTimer();
-        eatTimer.capture();
+        // 2. HP und Hut-Bild basierend auf dem Typ setzen
+        if ("HUT_15".equals(type)) {
+            entity.setProperty("hp", 15);
+            addHut("Zombies/Goldegger_Hut4.png", -15);
+        }
+        else if ("HUT_10".equals(type)) {
+            entity.setProperty("hp", 10);
+            addHut("Zombies/Hut2.png", -10);
+        }
+        else {
+            entity.setProperty("hp", 5); // Normaler Zombie
+        }
+    }
+
+    private void addHut(String pfad, double yOffset) {
+        Texture hut = FXGL.texture(pfad);
+        hut.setTranslateX(15);
+        hut.setTranslateY(yOffset);
+
+        // Anstatt nur addChild, füge ihn explizit ganz oben hinzu
+        entity.getViewComponent().addChild(hut);
+        hut.toFront(); // <--- Zwingt das JavaFX Node nach vorne
     }
 
     @Override
     public void onUpdate(double tpf) {
-        // 3. LOGIK: Laufen oder Fressen?
-        if (targetPlant == null) {
-            // Laufen
-            entity.translateX(-30 * tpf);
-        } else {
-            // Fressen
-            if (targetPlant.isActive()) {
-                if (eatTimer.elapsed(Duration.seconds(1.0))) {
-                    int currentHp = targetPlant.getInt("hp");
-                    targetPlant.setProperty("hp", currentHp - 20);
-                    eatTimer.capture();
-                }
-            } else {
-                targetPlant = null; // Pflanze tot -> weiterlaufen
-            }
-        }
-    }
+        entity.translateX(-15 * tpf);
 
-    // Wird aufgerufen, wenn die Erbse trifft
-    public void takeDamage(int damage) {
-        hp -= damage;
-        if (hp <= 0) {
-            entity.removeFromWorld(); // Zombie stirbt
+        if (entity.getRightX() < 0) {
+            entity.removeFromWorld();
         }
-    }
-
-    // Wird aufgerufen, wenn er an eine Pflanze stößt
-    public void startEating(Entity plant) {
-        this.targetPlant = plant;
     }
 }

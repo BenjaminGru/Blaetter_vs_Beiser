@@ -6,10 +6,11 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.physics.CollisionHandler;
 import com.almasb.fxgl.texture.Texture;
-//import javafx.scene.Cursor;
+import javafx.scene.Cursor;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
@@ -64,6 +65,8 @@ public class Start extends GameApplication {
 
 
         //GOLF UI
+
+
         Rectangle secretbutton = new Rectangle(50,50, Color.TRANSPARENT);
 
         secretbutton.setTranslateX(getAppWidth() - 50);
@@ -79,57 +82,82 @@ public class Start extends GameApplication {
 
     }
 
+
+
     @Override
     protected void initGame() {
 
-        Texture bgTexture = FXGL.texture("Background.png");
-        bgTexture.setFitWidth(getAppWidth());
-        bgTexture.setFitHeight(getAppHeight());
-        bgTexture.setPreserveRatio(false);
+        System.out.println("#########################################");
+        System.out.println("DEBUG: initGame() wurde GESTARTET!");
+        System.out.println("#########################################");
+        // 1. Hintergrund & Factories
+        entityBuilder().view(texture("Background.png", getAppWidth(), getAppHeight())).zIndex(-100).buildAndAttach();
 
-        entityBuilder()
-                .at(0, 0)
-                .view(bgTexture)
-                .zIndex(-100)
-                .buildAndAttach();
-
+        getGameWorld().addEntityFactory(new Zombie());
         getGameWorld().addEntityFactory(new GameFactory());
-        //getGameWorld().addEntityFactory(new Zombie());
-
-
-        spawn("zombie", getAppWidth(), 85);
-        spawn("zombie", getAppWidth(), 185);
-        spawn("zombie", getAppWidth(), 285);
-        spawn("zombie", getAppWidth(), 385);
-        spawn("zombie", getAppWidth(), 485);
-
-
-
         gridService.drawGrid();
+
+
+        spawn("zombie", 100, 60);
+        spawn("zombie", getAppWidth(), 150);
+        spawn("zombie", getAppWidth(), 240);
+        spawn("zombie", getAppWidth(), 330);
+        spawn("zombie", getAppWidth(), 420);
+
+
+        // 2. Level laden mit Diagnose
+        try {
+            var loader = getAssetLoader().loadJSON("Level/level1.json", LevelData.class);
+            if (loader.isPresent()) {
+                LevelData level = loader.get();
+                System.out.println("--- START ---");
+                System.out.println("Datei gefunden! Levelname: " + level.levelName);
+
+                if (level.waves == null || level.waves.isEmpty()) {
+                    System.err.println("FEHLER: Die Liste 'waves' ist leer oder null! Prüfe die Namen im JSON.");
+                } else {
+                    System.out.println("Anzahl geplanter Zombies: " + level.waves.size());
+
+                    int[] lanesY = {70, 170, 280, 360, 460};
+
+                    for (LevelData.ZombieSpawn s : level.waves) {
+                        System.out.println("Plane Zombie: " + s.type + " bei Sekunde " + s.time);
+
+                        getGameTimer().runOnceAfter(() -> {
+                            SpawnData data = new SpawnData(getAppWidth(), lanesY[s.lane]);
+                            data.put("mitHut", "HUT".equalsIgnoreCase(s.type));
+                            spawn("zombie", data);
+                            System.out.println("!!! SPAWN JETZT: " + s.type);
+                        }, Duration.seconds(s.time));
+                    }
+                }
+                System.out.println("--- ENDE ---");
+            } else {
+                System.err.println("FEHLER: Datei 'Level/level1.json' existiert nicht im Ordner assets!");
+            }
+        } catch (Exception e) {
+            System.err.println("FEHLER beim JSON-Parsing: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
+
+
 
     @Override
     protected void initPhysics() {
 
-        // --- REGEL 1: ERBSE TRIFFT ZOMBIE ---
+        // Kollision: ERBSE trifft ZOMBIE
         getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.PEA, EntityType.ZOMBIE) {
+
             @Override
             protected void onCollisionBegin(Entity pea, Entity zombie) {
-                // 1. Die Erbse platzt sofort!
+                // DEIN PART: Die Erbse hat ihr Ziel erreicht und wird zerstört
                 pea.removeFromWorld();
 
-                // 2. Wir rufen die takeDamage-Methode auf unserem Zombie auf
-                zombie.getComponent(ZombieComponent.class).takeDamage(20);
-            }
-        });
-
-        // --- REGEL 2: ZOMBIE TRIFFT PFLANZE ---
-        getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.ZOMBIE, EntityType.PLANT) {
-            @Override
-            protected void onCollisionBegin(Entity zombie, Entity plant) {
-                // Wir rufen die startEating-Methode auf unserem Zombie auf.
-                // Dadurch wird seine "targetPlant" gesetzt, er stoppt und fängt an zu fressen!
-                zombie.getComponent(ZombieComponent.class).startEating(plant);
+                // PART VON DEINEM FREUND:
+                // Hier kann er später seinen Code einfügen, der dem Zombie Leben abzieht!
+                System.out.println("PENG! Erbse hat Zombie getroffen!");
+                // z.B. zombie.getComponent(ZombieComponent.class).takeDamage(20);
             }
         });
     }

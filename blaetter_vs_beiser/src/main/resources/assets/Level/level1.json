@@ -1,0 +1,14 @@
+{
+  "levelName": "Erste Invasion",
+  "waves": [
+    { "time": 15.0, "type": "NORMAL", "lane": 0 },
+    { "time": 20.0, "type": "HUT_15", "lane": 2 },
+    { "time": 20.0, "type": "HUT_10", "lane": 3 },
+    { "time": 50, "type": "NORMAL", "lane": 4 },
+    { "time": 55, "type": "NORMAL", "lane": 4 },
+    { "time": 100, "type": "HUT", "lane": 1 },
+    { "time": 150, "type": "HUT", "lane": 3 }
+
+  ]
+
+}
