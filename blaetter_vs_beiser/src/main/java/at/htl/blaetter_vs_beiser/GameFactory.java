@@ -114,4 +114,14 @@ public class GameFactory implements EntityFactory {
                 .build();
     }
 
+    @Spawns("zombie")
+    public Entity newZombie(SpawnData data) {
+        return entityBuilder(data)
+                .type(EntityType.ZOMBIE)
+                .bbox(new HitBox(BoundingShape.box(50, 90))) // Unsichtbare Hitbox!
+                .collidable()
+                .with(new ZombieComponent()) // Lädt Animation UND Logik!
+                .build();
+    }
+
 }

@@ -1,3 +1,9 @@
+## 🌱 Spielbeschreibung
+
+In diesem Spiel, inspiriert von Plants vs. Zombies, verteidigt der Spieler seinen Garten gegen angreifende Zombies. Auf einem Raster werden Pflanzen platziert, die entweder Ressourcen erzeugen oder die Gegner angreifen. Ziel ist es, die immer stärker werdenden Zombie-Wellen aufzuhalten, bevor sie das Ende des Spielfelds erreichen.
+
+
+
 
 ---
 
