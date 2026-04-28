@@ -3,211 +3,326 @@ package at.htl.blaetter_vs_beiser;
 import com.almasb.fxgl.scene.SubScene;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class GolfRangeScene extends SubScene {
 
-    // --- State Machine ---
-    private enum GameState { IDLE, AIMING, SWINGING, FLYING, FINISHED }
+    private enum GameState { IDLE, POWER_AIMING, DIRECTION_AIMING, HEIGHT_AIMING, SWINGING, FLYING, FINISHED }
     private GameState currentState = GameState.IDLE;
 
-    // --- Logik Variablen ---
-    private String selectedClub = "Driver";
+    // Physik & Ball
+    private double ballVelocityY = 0, ballVelocityX = 0, ballHeight = 0, ballVerticalVelocity = 0;
+    private double powerValue = 0, directionValue = 0, heightValue = 0;
+    private boolean barIncreasing = true;
     private double swingTimer = 0;
-    private double powerValue = 0;
-    private boolean powerIncreasing = true;
-    private double ballVelocityY = 0; // Wie schnell der Ball nach "vorne" (oben) fliegt
-    private double ballVelocityX = 0; // Ob der Ball nach links/rechts abdriftet
 
-    // --- Szene & UI ---
-    private Group worldGroup; // Bewegt sich (Kamera-Effekt)
-    private Group uiGroup;    // Bleibt starr auf dem Bildschirm
-    private Group powerBarGroup;
-    private Rectangle powerBarFill;
-    private Text feedbackText;
+    // Progression & Stats
+    private int coins = 0;
+    private int powerLevel = 1, accuracyLevel = 1, coinLevel = 1;
 
-    // --- Spielobjekte ---
-    private Rectangle playerSprite; // Später deine AnimatedTexture
-    private Circle golfBall;
-    private double startBallY; // Um zu wissen, wo der Abschlag war
+    // UI Komponenten
+    private Group worldGroup, uiGroup;
+    private Rectangle powerBarFill, heightBarFill, directionIndicator;
+    private Text feedbackText, coinDisplay, clubDisplay;
+    private Button nextTryButton, shopButton;
+    private Circle golfBall, ballShadow;
+    private double startBallY;
+
+    // Terrain & Zufall
+    private List<TerrainZone> terrainZones = new ArrayList<>();
+    private record TerrainZone(Rectangle shape, double friction, String type) {}
+    private Random random = new Random();
 
     public GolfRangeScene() {
         worldGroup = new Group();
         uiGroup = new Group();
         getContentRoot().getChildren().addAll(worldGroup, uiGroup);
 
+        startBallY = getAppHeight() - 150;
+        initStaticBall();
         buildWorld();
         buildUI();
 
-        // Klick-Logik für den ganzen Bildschirm
-        getContentRoot().setOnMouseClicked(e -> handleMouseClick());
+        getContentRoot().setOnMousePressed(e -> handleMouseClick());
+    }
+
+    private void initStaticBall() {
+        ballShadow = new Circle(5, Color.color(0, 0, 0, 0.4));
+        golfBall = new Circle(6, Color.WHITE);
+        golfBall.setStroke(Color.BLACK);
+        resetBallPosition();
     }
 
     private void buildWorld() {
-        // 1. Eine sehr lange Wiese (4000 Pixel lang, Start ist ganz unten)
-        Rectangle background = new Rectangle(getAppWidth(), 4000, Color.web("#2e8b57"));
-        background.setTranslateY(-3000); // Verschieben, damit wir unten starten
-        worldGroup.getChildren().add(background);
+        worldGroup.getChildren().clear();
+        terrainZones.clear();
 
-        // Meter-Markierungen alle 50 Meter
-        for (int i = 50; i <= 350; i += 50) {
-            double yPos = getAppHeight() - 200 - (i * 10); // 10 Pixel pro Meter als Maßstab
+        Rectangle roughBg = new Rectangle(getAppWidth(), 40000, Color.web("#0e3011"));
+        roughBg.setTranslateY(-39000);
+        worldGroup.getChildren().add(roughBg);
 
-            Text leftMarker = new Text(i + "m");
-            leftMarker.setFill(Color.WHITE); leftMarker.setTranslateX(50); leftMarker.setTranslateY(yPos);
+        double fairwayWidth = 600;
+        addTerrain(getAppWidth() / 2.0 - (fairwayWidth / 2.0), -39000, fairwayWidth, 40000, Color.web("#388e3c"), 0.97, "Fairway");
 
-            Text rightMarker = new Text(i + "m");
-            rightMarker.setFill(Color.WHITE); rightMarker.setTranslateX(getAppWidth() - 80); rightMarker.setTranslateY(yPos);
+        for (int i = 150; i <= 15000; i += 120) {
+            if (random.nextDouble() > 0.4) continue;
+            double yPos = getAppHeight() - 200 - (i * 10);
+            double w = 60 + random.nextDouble() * 140;
+            double h = 40 + random.nextDouble() * 80;
+            double xPos = random.nextDouble() * (getAppWidth() - w);
 
-            // Eine feine Linie quer über den Platz
-            Rectangle line = new Rectangle(getAppWidth(), 2, Color.color(1, 1, 1, 0.3));
-            line.setTranslateY(yPos);
-
-            worldGroup.getChildren().addAll(line, leftMarker, rightMarker);
+            if (random.nextBoolean()) {
+                addTerrain(xPos, yPos, w, h, Color.web("#1e88e5"), 0.0, "Water");
+            } else {
+                addTerrain(xPos, yPos, w, h, Color.web("#ffecb3"), 0.6, "Bunker");
+            }
         }
 
-        // 2. Der Spieler
-        playerSprite = new Rectangle(40, 80, Color.BLUE);
-        playerSprite.setTranslateX(getAppWidth() / 2.0 - 40);
-        playerSprite.setTranslateY(getAppHeight() - 200);
+        for (int i = 50; i <= 15000; i += 50) {
+            double yPos = getAppHeight() - 200 - (i * 10);
+            Rectangle line = new Rectangle(getAppWidth(), 1, Color.color(1, 1, 1, 0.15));
+            line.setTranslateY(yPos);
+            Text marker = new Text(i + "m"); marker.setFill(Color.LIGHTGRAY);
+            marker.setTranslateX(10); marker.setTranslateY(yPos - 2);
+            worldGroup.getChildren().addAll(line, marker);
+        }
 
-        // 3. Der Ball
-        golfBall = new Circle(5, Color.WHITE);
-        golfBall.setTranslateX(getAppWidth() / 2.0 + 10);
-        startBallY = getAppHeight() - 150;
-        golfBall.setTranslateY(startBallY);
+        worldGroup.getChildren().addAll(ballShadow, golfBall);
+    }
 
-        worldGroup.getChildren().addAll(playerSprite, golfBall);
+    private void addTerrain(double x, double y, double w, double h, Color color, double friction, String type) {
+        Rectangle rect = new Rectangle(w, h, color);
+        rect.setTranslateX(x); rect.setTranslateY(y);
+        worldGroup.getChildren().add(rect);
+        terrainZones.add(new TerrainZone(rect, friction, type));
     }
 
     private void buildUI() {
-        // Zurück-Button
-        Button backButton = new Button("Zurück zu PvZ");
-        backButton.setTranslateX(10); backButton.setTranslateY(10);
-        backButton.setOnAction(e -> getSceneService().popSubScene());
+        uiGroup.getChildren().clear();
 
-        // Reset-Button (um neuen Ball zu schlagen)
-        Button resetButton = new Button("Neuer Ball");
-        resetButton.setTranslateX(120); resetButton.setTranslateY(10);
-        resetButton.setVisible(false); // Erst am Ende sichtbar
-        resetButton.setOnAction(e -> resetGame(resetButton));
+        shopButton = new Button("SHOP");
+        shopButton.setTranslateX(getAppWidth() - 85); shopButton.setTranslateY(10);
+        shopButton.setStyle("-fx-background-color: #ffd700; -fx-font-weight: bold;");
+        shopButton.setOnAction(e -> openShopUI());
 
-        // Feedback Text
-        feedbackText = new Text("Klicke, um den Schwung zu starten!");
-        feedbackText.setFont(Font.font(20)); feedbackText.setFill(Color.YELLOW);
-        feedbackText.setTranslateX(getAppWidth() / 2.0 - 180); feedbackText.setTranslateY(80);
+        coinDisplay = new Text("0 C"); coinDisplay.setFont(Font.font("Monospaced", FontWeight.BOLD, 18));
+        coinDisplay.setFill(Color.GOLD); coinDisplay.setTranslateX(getAppWidth() - 110); coinDisplay.setTranslateY(65);
 
-        // --- SCHWUNG-LEISTE ---
-        powerBarGroup = new Group();
-        Rectangle powerBarBg = new Rectangle(300, 30, Color.BLACK);
-        powerBarBg.setStroke(Color.WHITE);
-        powerBarFill = new Rectangle(0, 30, Color.RED);
-        Rectangle perfectZone = new Rectangle(20, 30, Color.LIMEGREEN);
-        perfectZone.setTranslateX(140);
-        powerBarGroup.getChildren().addAll(powerBarBg, perfectZone, powerBarFill);
-        powerBarGroup.setTranslateX(getAppWidth() / 2.0 - 150);
-        powerBarGroup.setTranslateY(getAppHeight() - 80);
-        powerBarGroup.setVisible(false);
+        clubDisplay = new Text("CLUB: DRIVER"); clubDisplay.setFont(Font.font("Verdana", FontWeight.BOLD, 14));
+        clubDisplay.setFill(Color.LIGHTBLUE); clubDisplay.setTranslateX(20); clubDisplay.setTranslateY(30);
 
-        uiGroup.getChildren().addAll(backButton, resetButton, feedbackText, powerBarGroup);
+        feedbackText = new Text("BEREIT?"); feedbackText.setFont(Font.font("Verdana", FontWeight.BOLD, 22));
+        feedbackText.setFill(Color.WHITE); feedbackText.setWrappingWidth(getAppWidth());
+        feedbackText.setTextAlignment(TextAlignment.CENTER); feedbackText.setTranslateY(110);
+
+        nextTryButton = new Button("NÄCHSTER SCHLAG"); nextTryButton.setTranslateX(getAppWidth()/2.0 - 70);
+        nextTryButton.setTranslateY(20); nextTryButton.setVisible(false); nextTryButton.setOnAction(e -> resetGame());
+
+        setupBars();
+        uiGroup.getChildren().addAll(coinDisplay, clubDisplay, feedbackText, nextTryButton, shopButton);
+    }
+
+    private void setupBars() {
+        // Power Bar Fix: Clip sorgt dafür, dass nichts übersteht
+        Rectangle pBg = new Rectangle(20, 300, Color.web("#222222"));
+        pBg.setStroke(Color.WHITE); pBg.setStrokeWidth(2);
+
+        powerBarFill = new Rectangle(20, 0, Color.web("#FF3333"));
+        Group pBar = new Group(pBg, powerBarFill);
+        pBar.setTranslateX(getAppWidth() - 35); pBar.setTranslateY(getAppHeight() - 350);
+        // Clip anwenden
+        Rectangle clipP = new Rectangle(20, 300);
+        pBar.setClip(clipP);
+
+        // Height Bar
+        Rectangle hBg = new Rectangle(20, 300, Color.web("#222222"));
+        hBg.setStroke(Color.WHITE); hBg.setStrokeWidth(2);
+        heightBarFill = new Rectangle(20, 0, Color.web("#33CCFF"));
+        Group hBar = new Group(hBg, heightBarFill);
+        hBar.setTranslateX(getAppWidth() - 65); hBar.setTranslateY(getAppHeight() - 350);
+        hBar.setClip(new Rectangle(20, 300));
+
+        // Direction Indicator
+        directionIndicator = new Rectangle(4, 25, Color.WHITE);
+        Group dBar = new Group(new Rectangle(200, 15, Color.web("#222222")), directionIndicator);
+        dBar.setTranslateX(getAppWidth()/2.0 - 100); dBar.setTranslateY(getAppHeight() - 35);
+
+        uiGroup.getChildren().addAll(pBar, hBar, dBar);
     }
 
     private void handleMouseClick() {
-        if (currentState == GameState.IDLE) {
-            currentState = GameState.AIMING;
-            powerValue = 0; powerIncreasing = true;
-            powerBarGroup.setVisible(true);
-            feedbackText.setText("Klicke nochmal im grünen Bereich!");
-
-        } else if (currentState == GameState.AIMING) {
-            currentState = GameState.SWINGING;
-            powerBarGroup.setVisible(false);
-
-            // Berechnung der Schuss-Qualität
-            double accuracy = Math.abs(150 - powerValue); // 0 ist perfekt
-            double powerPercentage = powerValue / 300.0; // 0.0 bis 1.0
-
-            // Flugbahn berechnen
-            ballVelocityY = - (500 * powerPercentage + 300); // Basis-Kraft + Extra
-
-            // Wenn nicht perfekt getroffen, fliegt er nach links oder rechts!
-            if (powerValue < 140) ballVelocityX = - (accuracy * 2); // Hook
-            else if (powerValue > 160) ballVelocityX = (accuracy * 2);  // Slice
-            else ballVelocityX = 0; // Geradeaus
-
-            feedbackText.setText("Schwung!");
-
-            feedbackText.setText("Schwung!");
-
-            // FIX: Wir setzen unseren eigenen Timer auf 0.5 Sekunden
-            currentState = GameState.SWINGING;
-            swingTimer = 0.5;
-        }
+        if (nextTryButton.isVisible() || currentState == GameState.FINISHED) return;
+        if (currentState == GameState.IDLE) { currentState = GameState.POWER_AIMING; barIncreasing = true; shopButton.setVisible(false); }
+        else if (currentState == GameState.POWER_AIMING) { currentState = GameState.DIRECTION_AIMING; barIncreasing = true; }
+        else if (currentState == GameState.DIRECTION_AIMING) { currentState = GameState.HEIGHT_AIMING; barIncreasing = true; }
+        else if (currentState == GameState.HEIGHT_AIMING) executeSwing();
     }
 
-    private void resetGame(Button btn) {
-        currentState = GameState.IDLE;
-        worldGroup.setTranslateY(0); // Kamera zurück
-        golfBall.setTranslateY(startBallY);
-        golfBall.setTranslateX(getAppWidth() / 2.0 + 10);
-        golfBall.setScaleX(1); golfBall.setScaleY(1); // Größe zurücksetzen
-        btn.setVisible(false);
-        feedbackText.setText("Klicke, um den Schwung zu starten!");
+    private void executeSwing() {
+        currentState = GameState.SWINGING;
+        double pPct = powerValue / 300.0;
+        double hPct = heightValue / 300.0;
+
+        // DRIVER PHYSIK: Sehr viel Power, flacherer Winkel
+        // Basis-Kraft erhöht, aber Skalierung durch Upgrades generft
+        double basePower = 1300;
+        double totalForce = (basePower * pPct + 300) * (1 + (powerLevel - 1) * 0.06);
+
+        // Der Driver hat einen Loft von ca. 9° bis 15°. hPct steuert hier die Flugkurve.
+        double angleDeg = 9 + (hPct * 20);
+        double angleRad = Math.toRadians(angleDeg);
+
+        ballVerticalVelocity = Math.sin(angleRad) * totalForce;
+        ballVelocityY = -Math.cos(angleRad) * totalForce;
+
+        double error = (directionValue - 100);
+        ballVelocityX = error * (3.5 / (1 + (accuracyLevel * 0.4)));
+
+        feedbackText.setText("DRIVER SHOT!"); feedbackText.setFill(Color.LIME);
+        swingTimer = 0.15;
     }
 
     @Override
     public void onUpdate(double tpf) {
-        if (currentState == GameState.AIMING) {
-            // Powerbar wackeln lassen
-            double speed = 300 * tpf;
-            if (powerIncreasing) {
-                powerValue += speed;
-                if (powerValue >= 300) { powerValue = 300; powerIncreasing = false; }
-            } else {
-                powerValue -= speed;
-                if (powerValue <= 0) { powerValue = 0; powerIncreasing = true; }
-            }
-            powerBarFill.setWidth(powerValue);
-            if(Math.abs(150 - powerValue) < 15) powerBarFill.setFill(Color.LIMEGREEN);
-            else powerBarFill.setFill(Color.RED);
+        if (currentState == GameState.POWER_AIMING) {
+            powerValue += (barIncreasing ? 1300 : -1300) * tpf;
+            if (powerValue >= 300) { powerValue = 300; barIncreasing = false; }
+            if (powerValue <= 0) { powerValue = 0; barIncreasing = true; }
+            powerBarFill.setHeight(powerValue);
+            powerBarFill.setTranslateY(300 - powerValue);
+        } else if (currentState == GameState.DIRECTION_AIMING) {
+            directionValue += (barIncreasing ? 450 : -450) * tpf;
+            if (directionValue >= 196) { directionValue = 196; barIncreasing = false; }
+            if (directionValue <= 0) { directionValue = 0; barIncreasing = true; }
+            directionIndicator.setTranslateX(directionValue);
+        } else if (currentState == GameState.HEIGHT_AIMING) {
+            heightValue += (barIncreasing ? 1100 : -1100) * tpf;
+            if (heightValue >= 300) { heightValue = 300; barIncreasing = false; }
+            if (heightValue <= 0) { heightValue = 0; barIncreasing = true; }
+            heightBarFill.setHeight(heightValue);
+            heightBarFill.setTranslateY(300 - heightValue);
+        } else if (currentState == GameState.FLYING) updatePhysics(tpf);
+        else if (currentState == GameState.SWINGING) { swingTimer -= tpf; if (swingTimer <= 0) currentState = GameState.FLYING; }
+    }
 
-        } else if (currentState == GameState.FLYING) {
-            // Ball bewegen
-            golfBall.setTranslateY(golfBall.getTranslateY() + ballVelocityY * tpf);
-            golfBall.setTranslateX(golfBall.getTranslateX() + ballVelocityX * tpf);
+    private void updatePhysics(double tpf) {
+        ballHeight += ballVerticalVelocity * tpf;
 
-            // "3D-Effekt": Ball wird beim Fliegen kurz größer, dann kleiner
-            golfBall.setScaleX(golfBall.getScaleX() * 0.995);
-            golfBall.setScaleY(golfBall.getScaleY() * 0.995);
+        if (ballHeight > 0) {
+            ballVerticalVelocity -= 800 * tpf; // Schwerkraft
+            ballVelocityY *= 0.998; // Luftwiderstand
+            ballVelocityX *= 0.998;
+            golfBall.setScaleX(1 + ballHeight / 80.0);
+            golfBall.setScaleY(1 + ballHeight / 80.0);
+            golfBall.setTranslateY(ballShadow.getTranslateY() - ballHeight);
+        } else {
+            ballHeight = 0;
+            // Bouncen
+            if (Math.abs(ballVerticalVelocity) > 60) ballVerticalVelocity = -ballVerticalVelocity * 0.25;
+            else ballVerticalVelocity = 0;
+            golfBall.setTranslateY(ballShadow.getTranslateY());
+        }
 
-            // Reibung (Ball wird langsamer)
-            ballVelocityY *= 0.98;
-            ballVelocityX *= 0.98;
+        // Rand-Kollision (Bounce)
+        if (ballShadow.getTranslateX() < 10 || ballShadow.getTranslateX() > getAppWidth() - 10) {
+            ballVelocityX *= -0.5;
+            ballShadow.setTranslateX(ballShadow.getTranslateX() < 10 ? 11 : getAppWidth() - 11);
+        }
 
-            // Kamera-Verfolgung (Die "Drohne")
-            // Wir verschieben die ganze Welt so, dass der Ball bei Y = 300 auf dem Bildschirm bleibt
-            double cameraTargetY = -(golfBall.getTranslateY() - 300);
+        ballShadow.setTranslateY(ballShadow.getTranslateY() + ballVelocityY * tpf);
+        ballShadow.setTranslateX(ballShadow.getTranslateX() + ballVelocityX * tpf);
+        golfBall.setTranslateX(ballShadow.getTranslateX());
 
-            // Kamera darf aber nicht weiter nach unten als der Startpunkt
-            if (cameraTargetY > 0) {
-                worldGroup.setTranslateY(cameraTargetY);
-            }
+        double friction = (ballHeight > 0) ? 1.0 : 0.975;
+        String currentTerrain = "Rough";
 
-            // Stoppen, wenn der Ball fast keine Geschwindigkeit mehr hat
-            if (Math.abs(ballVelocityY) < 10) {
-                currentState = GameState.FINISHED;
-                double distance = (startBallY - golfBall.getTranslateY()) / 10.0;
-                feedbackText.setText(String.format("Gelandet! Distanz: %.1f Meter", distance));
+        if (ballHeight <= 0) {
+            for (TerrainZone zone : terrainZones) {
+                if (ballShadow.getTranslateX() >= zone.shape.getTranslateX() &&
+                        ballShadow.getTranslateX() <= zone.shape.getTranslateX() + zone.shape.getWidth() &&
+                        ballShadow.getTranslateY() >= zone.shape.getTranslateY() &&
+                        ballShadow.getTranslateY() <= zone.shape.getTranslateY() + zone.shape.getHeight()) {
 
-                // Reset Button anzeigen (das 2. Element in der uiGroup)
-                uiGroup.getChildren().get(1).setVisible(true);
+                    if (zone.type.equals("Water")) {
+                        golfBall.setVisible(false);
+                        ballVelocityX = 0; ballVelocityY = 0;
+                        currentTerrain = "Water";
+                    } else {
+                        friction = zone.friction;
+                        currentTerrain = zone.type;
+                    }
+                    break;
+                }
             }
         }
+
+        ballVelocityY *= friction;
+        ballVelocityX *= friction;
+        worldGroup.setTranslateY(Math.max(0, -(ballShadow.getTranslateY() - 400)));
+
+        if (Math.abs(ballVelocityY) < 5 && Math.abs(ballVelocityX) < 5 && ballHeight <= 0) {
+            finishStroke(currentTerrain);
+        }
+    }
+
+    private void finishStroke(String terrain) {
+        currentState = GameState.FINISHED;
+        double dist = Math.max(0, (startBallY - ballShadow.getTranslateY()) / 10.0);
+        int reward = (int)(dist * (0.2 * coinLevel));
+
+        if (terrain.equals("Water")) {
+            reward = 0; feedbackText.setText("WASSER! (0 C)"); feedbackText.setFill(Color.AQUA);
+        } else if (terrain.equals("Bunker")) {
+            feedbackText.setText(String.format("%.1f m (BUNKER)", dist)); feedbackText.setFill(Color.ORANGE);
+        } else {
+            feedbackText.setText(String.format("%.1f Meter (+%d C)", dist, reward)); feedbackText.setFill(Color.YELLOW);
+        }
+
+        coins += reward; coinDisplay.setText(coins + " C"); nextTryButton.setVisible(true);
+    }
+
+    private void openShopUI() {
+        VBox layout = new VBox(10); layout.setStyle("-fx-background-color: rgba(0,0,0,0.9); -fx-padding: 20; -fx-alignment: center; -fx-border-color: gold; -fx-border-width: 2;");
+        layout.setTranslateX(getAppWidth()/2.0 - 120); layout.setTranslateY(150);
+
+        Button p = new Button("POWER (Lvl " + powerLevel + "): " + (powerLevel * 200));
+        p.setOnAction(e -> { if(coins >= powerLevel*200){ coins-=powerLevel*200; powerLevel++; closeShop(layout); }});
+
+        Button a = new Button("ACCURACY (Lvl " + accuracyLevel + "): " + (accuracyLevel * 150));
+        a.setOnAction(e -> { if(coins >= accuracyLevel*150){ coins-=accuracyLevel*150; accuracyLevel++; closeShop(layout); }});
+
+        Button c = new Button("INCOME (Lvl " + coinLevel + "): " + (coinLevel * 250));
+        c.setOnAction(e -> { if(coins >= coinLevel*250){ coins-=coinLevel*250; coinLevel++; closeShop(layout); }});
+
+        Button close = new Button("X"); close.setOnAction(e -> closeShop(layout));
+
+        Text t = new Text("PRO-SHOP"); t.setFill(Color.GOLD); t.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        layout.getChildren().addAll(t, p, a, c, close);
+        uiGroup.getChildren().add(layout); shopButton.setDisable(true);
+    }
+
+    private void closeShop(VBox layout) { uiGroup.getChildren().remove(layout); shopButton.setDisable(false); coinDisplay.setText(coins + " C"); }
+    private void resetBallPosition() { ballShadow.setTranslateX(getAppWidth()/2.0); ballShadow.setTranslateY(startBallY); golfBall.setTranslateX(ballShadow.getTranslateX()); golfBall.setTranslateY(ballShadow.getTranslateY()); golfBall.setVisible(true); }
+
+    private void resetGame() {
+        currentState = GameState.IDLE;
+        ballVelocityX = 0; ballVelocityY = 0; ballHeight = 0; ballVerticalVelocity = 0;
+        powerValue = 0; directionValue = 0; heightValue = 0;
+        buildWorld(); resetBallPosition();
+        nextTryButton.setVisible(false); shopButton.setVisible(true);
+        feedbackText.setText("NEXT ROUND"); feedbackText.setFill(Color.WHITE);
     }
 }
