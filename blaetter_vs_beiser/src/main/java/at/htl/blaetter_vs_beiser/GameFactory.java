@@ -33,11 +33,11 @@ public class GameFactory implements EntityFactory {
     @Spawns("icepea")
     public Entity newIcePea(SpawnData data) {
         return entityBuilder(data)
-                .type(EntityType.PEA)
-                // Ein hellblauer Kreis für Eis-Erbsen!
+                .type(EntityType.PEA) // Bleibt PEA, damit die Kollision greift
                 .viewWithBBox(new javafx.scene.shape.Circle(8, javafx.scene.paint.Color.LIGHTBLUE))
                 .with(new com.almasb.fxgl.dsl.components.ProjectileComponent(new javafx.geometry.Point2D(1, 0), 300))
                 .collidable()
+                .with("isIce", true) // NEU: Der Eis-Stempel!
                 .build();
     }
 
@@ -49,7 +49,7 @@ public class GameFactory implements EntityFactory {
                 .with(new Peashooter()) // <--- HIER wird endlich dein wackelnder Spritesheet geladen!
                 .bbox(new HitBox(BoundingShape.box(50, 70)))
                 .collidable()
-                .with("hp",100)
+                .with("hp", 100)
                 .build();
 
     }
@@ -62,7 +62,8 @@ public class GameFactory implements EntityFactory {
                 .with(new at.htl.blaetter_vs_beiser.Components_Plants.Sunflower())
                 .bbox(new HitBox(BoundingShape.box(50, 70)))
                 .collidable()
-                .with("hp",75)
+                .type(EntityType.PLANT)
+                .with("hp", 75)
                 .build();
     }
 
@@ -74,7 +75,8 @@ public class GameFactory implements EntityFactory {
                 .with(new at.htl.blaetter_vs_beiser.Components_Plants.Wallnut())
                 .bbox(new HitBox(BoundingShape.box(50, 70)))
                 .collidable()
-                .with("hp",200)
+                .type(EntityType.PLANT)
+                .with("hp", 200)
                 .build();
     }
 
@@ -82,11 +84,11 @@ public class GameFactory implements EntityFactory {
     @Spawns("potatomine")
     public Entity newPotatomine(SpawnData data) {
         return entityBuilder(data)
-                // Wir fügen unsere brandneue Animations-Komponente hinzu:
                 .with(new at.htl.blaetter_vs_beiser.Components_Plants.Potatomine())
                 .bbox(new HitBox(BoundingShape.box(50, 70)))
                 .collidable()
-                .with("hp",100)
+                .type(EntityType.PLANT)
+                .with("hp", 100)
                 .build();
     }
 
@@ -98,7 +100,8 @@ public class GameFactory implements EntityFactory {
                 .with(new at.htl.blaetter_vs_beiser.Components_Plants.Cherrybomb())
                 .bbox(new HitBox(BoundingShape.box(50, 70)))
                 .collidable()
-                .with("hp",125)
+                .type(EntityType.PLANT)
+                .with("hp", 125)
                 .build();
     }
 
@@ -110,18 +113,25 @@ public class GameFactory implements EntityFactory {
                 .with(new at.htl.blaetter_vs_beiser.Components_Plants.Snowpeashooter())
                 .bbox(new HitBox(BoundingShape.box(50, 70)))
                 .collidable()
-                .with("hp",100)
+                .type(EntityType.PLANT)
+                .with("hp", 100)
                 .build();
     }
 
     @Spawns("zombie")
     public Entity newZombie(SpawnData data) {
+
+        String type = data.hasKey("zombieType") ? data.get("zombieType") : "NORMAL";
+
+        // NEU: Wir legen die Lebenspunkte in den "Rucksack" (SpawnData) des Zombies!
+        // Das wird beim build() automatisch zu properties.getInt("hp").
+        data.put("hp", 100);
+
         return entityBuilder(data)
                 .type(EntityType.ZOMBIE)
                 .bbox(new HitBox(BoundingShape.box(50, 90))) // Unsichtbare Hitbox!
                 .collidable()
-                .with(new ZombieComponent()) // Lädt Animation UND Logik!
+                .with(new ZombieComponent(type))
                 .build();
     }
-
 }

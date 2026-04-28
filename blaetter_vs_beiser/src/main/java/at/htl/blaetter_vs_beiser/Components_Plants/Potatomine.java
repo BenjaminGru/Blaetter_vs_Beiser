@@ -1,6 +1,7 @@
 package at.htl.blaetter_vs_beiser.Components_Plants;
 
 import at.htl.blaetter_vs_beiser.EntityType;
+import at.htl.blaetter_vs_beiser.ZombieComponent;
 import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
@@ -70,10 +71,16 @@ public class Potatomine extends Component {
             var zombies = getGameWorld().getEntitiesByType(EntityType.ZOMBIE);
 
             for (var zombie : zombies) {
-                // Wenn ein Zombie die Mine betritt (Distanz unter 40 Pixel)
-                if (entity.distance(zombie) < 40) {
-                    zombie.removeFromWorld(); // Zombie stirbt
-                    entity.removeFromWorld(); // Mine explodiert/verschwindet
+                // Berühren sich die Hitboxen von Mine und Zombie?
+                if (entity.isColliding(zombie)) {
+
+                    // 1. Zombie wird sofort gelöscht
+                    zombie.removeFromWorld();
+
+                    // 2. Die Mine zerstört sich selbst
+                    entity.removeFromWorld();
+
+                    System.out.println("BOOOOM! Kartoffelmine hat den Zombie weggesprengt!");
 
                     // Optional: play("explosion.wav");
                 }
